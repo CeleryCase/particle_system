@@ -30,7 +30,7 @@ VertexOut VS(VertexParticle vIn)
     vOut.posW = 0.5f * t * t * g_AccelW + t * vIn.initialVelW + vIn.initialPosW;
     
     // 颜色随着时间褪去
-    float opacity = 1.0f - smoothstep(0.0f, 1.0f, t / 1.0f);
+    float opacity = 1.0f - smoothstep(0.0f, 1.0f, t / 1.0f / 2);
     vOut.color = float4(1.0f, 1.0f, 1.0f, opacity);
     
     vOut.sizeW = vIn.sizeW;
@@ -98,11 +98,11 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
     if (gIn[0].type == PT_EMITTER)
     {
         // 是否到时间发射新的粒子
-        if (gIn[0].age > g_EmitInterval)
+        if (gIn[0].age > g_EmitInterval / 3)
         {
-            float3 vRandom = RandUnitVec3(0.0f);
-            vRandom.x *= 0.5f;
-            vRandom.z *= 0.5f;
+            float3 vRandom = 1.5 * RandUnitVec3(0.0f);
+            // vRandom.x *= 0.5f;
+            // vRandom.z *= 0.5f;
             
             VertexParticle p;
             p.initialPosW = g_EmitPosW.xyz;
