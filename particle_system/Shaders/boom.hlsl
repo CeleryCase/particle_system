@@ -25,12 +25,17 @@ VertexOut VS(VertexParticle vIn)
     VertexOut vOut;
     
     float t = vIn.age;
+
+    [flatten]
+    if (vIn.type == PT_SHELL) {
+        t = min(vIn.age, g_EmitInterval);
+    }
     
     // 恒定加速度等式
     vOut.posW = 0.5f * t * t * vIn.accelW * g_AccelW + t * vIn.initialVelW + vIn.initialPosW;
     
     // 颜色随着时间褪去
-    float opacity = 1.0f - smoothstep(0.0f, 1.0f, t / 1.0f);
+    float opacity = 1.0f - smoothstep(0.0f, 1.0f, t / 1.0 * 2.0f);
     vOut.color = float4(1.0f, 1.0f, 1.0f, opacity);
     
     vOut.sizeW = vIn.sizeW;
@@ -85,6 +90,7 @@ float4 PS(GeoOut pIn) : SV_Target
     if (pIn.type == PT_SHELL)
     {
         return g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
+        // return (0.0f, 0.0f, 0.0f, 0.0f);
     }
     else
     {
@@ -106,21 +112,23 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
     {
         // if (gIn[0].age > g_EmitInterval * 0.01) 
         {
-            float3 vRandom = RandVec3(0.0f) * 5;
+            for (int i = 0; i < 16; ++i) {
+                float3 vRandom = RandVec3((float)i / 16) * 50;
+                VertexParticle p;
+                p.initialPosW = gIn[0].initialPosW;
+                p.initialVelW = float3(0.0f, 0.0f, 0.0f);
+                p.accelW = vRandom;
+                p.sizeW = float2(2.5f, 2.5f);
+                // p.age = 0.0f;
+                p.age = RandVec3(0.0f).x * g_EmitInterval / 4;
+                p.type = PT_SHELL;
+                p.emitCount = 0;
             
-            VertexParticle p;
-            p.initialPosW = gIn[0].initialPosW;
-            p.initialVelW = float3(0.0f, 0.0f, 0.0f);
-            p.accelW = vRandom;
-            p.sizeW = float2(1.5f, 1.5f);
-            p.age = 0.0f;
-            p.type = PT_SHELL;
-            p.emitCount = 0;
-            
-            output.Append(p);
-            gIn[0].emitCount++;
+                output.Append(p);
+                gIn[0].emitCount++;
+            }
 
-            if (gIn[0].emitCount <= 32) {
+            if (gIn[0].emitCount < 64) {
                 output.Append(gIn[0]);
             }
         } 
@@ -132,23 +140,29 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
     }
     else if (gIn[0].type == PT_SHELL) 
     {
-        if (gIn[0].age > g_EmitInterval * 0.1) 
+        if (gIn[0].age > g_EmitInterval) 
+        // if (1)
         {
-            float3 vRandom = RandVec3(0.0f) * 5;
+            for (int i = 0; i < 16; ++i) {
+                float3 vRandom = RandVec3((float)i / 16) * 3;
+                float t = g_EmitInterval;
+                float3 posW = 0.5f * t * t * gIn[0].accelW * g_AccelW + t * gIn[0].initialVelW + gIn[0].initialPosW;
+                VertexParticle p;
+                // p.initialPosW = gIn[0].initialPosW;
+                p.initialPosW = posW;
+                p.initialVelW = float3(0.0f, 0.0f, 0.0f);
+                p.accelW = vRandom;
+                p.sizeW = float2(2.5f, 2.5f);
+                p.age = 0.0f;
+                p.type = PT_PARTICLE;
+                p.emitCount = 0;
             
-            VertexParticle p;
-            p.initialPosW = gIn[0].initialPosW;
-            p.initialVelW = float3(0.0f, 0.0f, 0.0f);
-            p.accelW = vRandom;
-            p.sizeW = float2(0.5f, 0.5f);
-            p.age = 0.0f;
-            p.type = PT_PARTICLE;
-            p.emitCount = 0;
-            
-            output.Append(p);
+                output.Append(p);
 
-            gIn[0].emitCount++;
-            if (gIn[0].emitCount <= 128 || gIn[0].age <= g_AliveTime) {
+                gIn[0].emitCount++;
+            }
+
+            if (gIn[0].emitCount <= 256) {
                 output.Append(gIn[0]);
             }
         }

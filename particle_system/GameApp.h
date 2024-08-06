@@ -59,7 +59,7 @@ private:
     ParticleEffect m_FireEffect;                                        // 火焰特效
     ParticleEffect m_BoomEffect;                                        // 爆炸特效
     ParticleEffect m_FountainEffect;                                    // 喷泉特效
-    ParticleType m_CurrParticleType = ParticleType::Fountain;                                    // 当前显示粒子
+    ParticleType m_CurrParticleType = ParticleType::Boom;                                    // 当前显示粒子
 
     std::unique_ptr<Texture2D> m_pLitTexture;                           // 中间场景缓冲区
 

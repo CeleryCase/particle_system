@@ -113,7 +113,11 @@ void GameApp::UpdateScene(float dt)
             m_Fountain.Reset();
         }        
 
-        static int curr_particle_item = 3;
+        static int curr_particle_item = 2;
+        static ParticleManager *curr_particle = &m_Boom;
+        static float fountainAliveTime = 3.0f;
+        static float fountainEmitInterval = 0.0015f;
+        static DirectX::XMFLOAT3 accel(0.0f, 7.8f, 0.0f);
         const char* particle_strs[] = {
             "Flare",
             "Rain",
@@ -123,18 +127,36 @@ void GameApp::UpdateScene(float dt)
         if (ImGui::Combo("Particle Type", &curr_particle_item, particle_strs, ARRAYSIZE(particle_strs)))
         {
             m_CurrParticleType = static_cast<ParticleType>(curr_particle_item);
+            switch (m_CurrParticleType) {
+                case ParticleType::Fire: curr_particle = &m_Fire; break;
+                case ParticleType::Rain: curr_particle = &m_Rain; break;
+                case ParticleType::Boom: curr_particle = &m_Boom; break;
+                case ParticleType::Fountain: curr_particle = &m_Fountain; break;
+                default: curr_particle = &m_Fountain; break;
+            }
+            // curr_particle->SetAliveTime(fountainAliveTime);
+            // curr_particle->SetEmitInterval(fountainEmitInterval);
         }                                                                            
+        if (ImGui::SliderFloat("Emit Interval", &fountainEmitInterval, 0.0f, 2.0f, "%.4f"))
+        {
+            curr_particle->SetEmitInterval(fountainEmitInterval);
+        }
 
-        ImGui::Text("Fountain" );
-        static float fountainAliveTime = 3.0f;
         if (ImGui::SliderFloat("Alive Time", &fountainAliveTime, 0.0f, 10.0f, "%.1f"))
         {
-            m_Fountain.SetAliveTime(fountainAliveTime);
+            curr_particle->SetAliveTime(fountainAliveTime);
         }
-        static float fountainEmitInterval = 0.005f;
-        if (ImGui::SliderFloat("Emit Interval", &fountainEmitInterval, 0.0f, 0.1f, "%.3f"))
+        if (ImGui::SliderFloat("Acceleration: x", &accel.x, -20.0f, 20.0f, "%.1f"))
         {
-            m_Fountain.SetEmitInterval(fountainEmitInterval);
+            curr_particle->SetAcceleration(accel);
+        }
+        if (ImGui::SliderFloat("Acceleration: y", &accel.y, -20.0f, 20.0f, "%.1f"))
+        {
+            curr_particle->SetAcceleration(accel);
+        }
+        if (ImGui::SliderFloat("Acceleration: z", &accel.z, -20.0f, 20.0f, "%.1f"))
+        {
+            curr_particle->SetAcceleration(accel);
         }
     }
     ImGui::End();
@@ -201,37 +223,37 @@ void GameApp::DrawScene()
     float black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
     m_pd3dImmediateContext->ClearRenderTargetView(m_pLitTexture->GetRenderTarget(), black);
     m_pd3dImmediateContext->ClearDepthStencilView(m_pDepthTexture->GetDepthStencil(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    // ID3D11RenderTargetView* pRTVs[]{ m_pLitTexture->GetRenderTarget() };
-    ID3D11RenderTargetView* pRTVs[]{ nullptr};
+    ID3D11RenderTargetView* pRTVs[]{ m_pLitTexture->GetRenderTarget() };
+    // ID3D11RenderTargetView* pRTVs[]{ nullptr};
 
-    // m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, m_pDepthTexture->GetDepthStencil());
+    m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, m_pDepthTexture->GetDepthStencil());
     D3D11_VIEWPORT vp = m_pCamera->GetViewPort();
     m_pd3dImmediateContext->RSSetViewports(1, &vp);
 
     // m_BasicEffect.DrawInstanced(m_pd3dImmediateContext.Get(), *m_pInstancedBuffer, m_Trees, 144);
     // // 绘制地面
-    // m_BasicEffect.SetRenderDefault();
-    // m_Ground.Draw(m_pd3dImmediateContext.Get(), m_BasicEffect);
+    m_BasicEffect.SetRenderDefault();
+    m_Ground.Draw(m_pd3dImmediateContext.Get(), m_BasicEffect);
 
     // ******************
     // 绘制天空盒
     //
     pRTVs[0] = GetBackBufferRTV();
-    // m_pd3dImmediateContext->RSSetViewports(1, &vp);
-    // m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, nullptr);
-    // m_SkyboxEffect.SetRenderDefault();
-    // m_SkyboxEffect.SetDepthTexture(m_pDepthTexture->GetShaderResource());
-    // m_SkyboxEffect.SetLitTexture(m_pLitTexture->GetShaderResource());
-    // m_Skybox.Draw(m_pd3dImmediateContext.Get(), m_SkyboxEffect);
-    // m_SkyboxEffect.SetDepthTexture(nullptr);
-    // m_SkyboxEffect.SetLitTexture(nullptr);
-    // m_SkyboxEffect.Apply(m_pd3dImmediateContext.Get());
+    m_pd3dImmediateContext->RSSetViewports(1, &vp);
+    m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, nullptr);
+    m_SkyboxEffect.SetRenderDefault();
+    m_SkyboxEffect.SetDepthTexture(m_pDepthTexture->GetShaderResource());
+    m_SkyboxEffect.SetLitTexture(m_pLitTexture->GetShaderResource());
+    m_Skybox.Draw(m_pd3dImmediateContext.Get(), m_SkyboxEffect);
+    m_SkyboxEffect.SetDepthTexture(nullptr);
+    m_SkyboxEffect.SetLitTexture(nullptr);
+    m_SkyboxEffect.Apply(m_pd3dImmediateContext.Get());
 
     // ******************
     // 粒子系统留在最后绘制便于混合
     //
     // 只显示粒子效果
-    m_pd3dImmediateContext->ClearRenderTargetView(GetBackBufferRTV(), black);
+    // m_pd3dImmediateContext->ClearRenderTargetView(GetBackBufferRTV(), black);
 
     m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, m_pDepthTexture->GetDepthStencil());
     // m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect);
@@ -344,7 +366,7 @@ bool GameApp::InitResource()
     HR(m_pd3dDevice->CreateShaderResourceView(pRandomTex.Get(), nullptr, pRandomTexSRV.ReleaseAndGetAddressOf()));
     m_TextureManager.AddTexture("FireRandomTex", pRandomTexSRV.Get());
 
-    m_Fire.InitResource(m_pd3dDevice.Get(), 500);
+    m_Fire.InitResource(m_pd3dDevice.Get(), 10000);
     m_Fire.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\flare0.dds"));
     m_Fire.SetTextureRandom(m_TextureManager.GetTexture("FireRandomTex"));
     m_Fire.SetTextureAsh(m_TextureManager.GetTexture("..\\Texture\\ash0.dds"));
@@ -360,15 +382,16 @@ bool GameApp::InitResource()
     HR(m_pd3dDevice->CreateShaderResourceView(pRandomTex.Get(), nullptr, pRandomTexSRV.ReleaseAndGetAddressOf()));
     m_TextureManager.AddTexture("BoomRandomTex", pRandomTexSRV.Get());
 
-    m_Boom.InitResource(m_pd3dDevice.Get(), 500);
+    m_Boom.InitResource(m_pd3dDevice.Get(), 200000);
     m_Boom.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\flare0.dds"));
     m_Boom.SetTextureRandom(m_TextureManager.GetTexture("BoomRandomTex"));
     m_Boom.SetTextureAsh(m_TextureManager.GetTexture("..\\Texture\\ash0.dds"));
     m_Boom.SetEmitPos(XMFLOAT3(0.0f, -1.0f, 0.0f));
     m_Boom.SetEmitDir(XMFLOAT3(0.0f, 1.0f, 0.0f));
     m_Boom.SetAcceleration(XMFLOAT3(1.0f, 1.0f, 1.0f));
-    m_Boom.SetEmitInterval(0.005f);
-    m_Boom.SetAliveTime(1.0f);
+    // m_Boom.SetEmitInterval(0.005f);
+    m_Boom.SetEmitInterval(0.2f);
+    m_Boom.SetAliveTime(2.5f);
     m_Boom.SetDebugObjectName("Boom");
 
     auto RandomClip = [&] (float min, float max) {
@@ -393,7 +416,7 @@ bool GameApp::InitResource()
     };
 
     for (int i = 0; i < randomValues.size(); i += 4) {
-        auto tmp = RandomDirectionInCone(static_cast<float>(M_PI_2 / 3));
+        auto tmp = RandomDirectionInCone(static_cast<float>(M_PI_2 / 2));
         randomValues[i] = std::get<0>(tmp);
         randomValues[i + 1] = std::get<1>(tmp);
         randomValues[i + 2] = std::get<2>(tmp);
@@ -405,14 +428,14 @@ bool GameApp::InitResource()
     HR(m_pd3dDevice->CreateShaderResourceView(pRandomTex.Get(), nullptr, pRandomTexSRV.ReleaseAndGetAddressOf()));
     m_TextureManager.AddTexture("FountainRandomTex", pRandomTexSRV.Get());
 
-    m_Fountain.InitResource(m_pd3dDevice.Get(), 100000);
+    m_Fountain.InitResource(m_pd3dDevice.Get(), 10000);
     m_Fountain.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\raindrop0.dds"));
     m_Fountain.SetTextureRandom(m_TextureManager.GetTexture("FountainRandomTex"));
-    m_Fountain.SetEmitPos(XMFLOAT3(0.0f, -1.0f, 0.0f));
+    m_Fountain.SetEmitPos(XMFLOAT3(0.0f, 0.0f, 0.0f));
     m_Fountain.SetEmitDir(XMFLOAT3(0.0f, 1.0f, 0.0f));
     m_Fountain.SetAcceleration(XMFLOAT3(0.0f, -9.8f, 0.0f));
-    m_Fountain.SetEmitInterval(0.005f);
-    m_Fountain.SetAliveTime(6.0f);
+    m_Fountain.SetEmitInterval(0.0015f);
+    m_Fountain.SetAliveTime(3.0f);
     m_Fountain.SetDebugObjectName("Fountain");
     
     std::generate(randomValues.begin(), randomValues.end(), [&]() { return randF(randEngine); });

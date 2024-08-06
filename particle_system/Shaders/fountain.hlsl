@@ -98,7 +98,7 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
     if (gIn[0].type == PT_EMITTER)
     {
         // 是否到时间发射新的粒子
-        if (gIn[0].age > g_EmitInterval / 3)
+        if (gIn[0].age > g_EmitInterval)
         {
             float3 vRandom = 1.5 * RandUnitVec3(0.0f);
             // vRandom.x *= 0.5f;
