@@ -3,6 +3,8 @@
 
 #include "Particle.hlsl"
 
+static const float2 g_TexCoord[4] = { float2(0.0f, 1.0f), float2(0.0f, 0.0f), float2(1.0f, 1.0f), float2(1.0f, 0.0f) };
+
 // 绘制输出
 struct VertexOut
 {
@@ -77,7 +79,8 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
         for (int i = 0; i < 4; ++i)
         {
             gOut.posH = mul(v[i], g_ViewProj);
-            gOut.tex = float2((float) (i % 2), 1.0f - (i / 2));
+            // gOut.tex = float2((float) (i % 2), 1.0f - (i / 2));
+            gOut.tex = g_TexCoord[i];
             gOut.color = gIn[0].color;
             gOut.type = gIn[0].type;
             output.Append(gOut);
@@ -112,15 +115,17 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
     {
         // if (gIn[0].age > g_EmitInterval * 0.01) 
         {
-            for (int i = 0; i < 16; ++i) {
+            for (int i = 0; i < 8; ++i) {
                 float3 vRandom = RandVec3((float)i / 16) * 50;
                 VertexParticle p;
                 p.initialPosW = gIn[0].initialPosW;
                 p.initialVelW = float3(0.0f, 0.0f, 0.0f);
                 p.accelW = vRandom;
+                // p.initialVelW = vRandom;
+                // p.accelW = float3(0.0f, 0.0f, 0.0f);
                 p.sizeW = float2(2.5f, 2.5f);
                 // p.age = 0.0f;
-                p.age = RandVec3(0.0f).x * g_EmitInterval / 4;
+                p.age = RandVec3(0.0f).x * g_EmitInterval / 1;
                 p.type = PT_SHELL;
                 p.emitCount = 0;
             
@@ -128,7 +133,7 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
                 gIn[0].emitCount++;
             }
 
-            if (gIn[0].emitCount < 64) {
+            if (gIn[0].emitCount < 32) {
                 output.Append(gIn[0]);
             }
         } 
@@ -144,7 +149,8 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
         // if (1)
         {
             for (int i = 0; i < 16; ++i) {
-                float3 vRandom = RandVec3((float)i / 16) * 3;
+                float3 vRandom = RandVec3((float)i / 16) * 25;
+                // vRandom.xy *= 0.5;
                 float t = g_EmitInterval;
                 float3 posW = 0.5f * t * t * gIn[0].accelW * g_AccelW + t * gIn[0].initialVelW + gIn[0].initialPosW;
                 VertexParticle p;
@@ -152,6 +158,8 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
                 p.initialPosW = posW;
                 p.initialVelW = float3(0.0f, 0.0f, 0.0f);
                 p.accelW = vRandom;
+                // p.initialVelW = vRandom;
+                // p.accelW = float3(0.0f, 0.0f, 0.0f);
                 p.sizeW = float2(2.5f, 2.5f);
                 p.age = 0.0f;
                 p.type = PT_PARTICLE;
@@ -162,7 +170,7 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
                 gIn[0].emitCount++;
             }
 
-            if (gIn[0].emitCount <= 256) {
+            if (gIn[0].emitCount <= 128) {
                 output.Append(gIn[0]);
             }
         }

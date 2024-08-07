@@ -827,7 +827,8 @@ HRESULT DirectX::SaveDDSTextureToFile(
     header->flags = DDS_HEADER_FLAGS_TEXTURE | DDS_HEADER_FLAGS_MIPMAP;
     header->height = desc.Height;
     header->width = desc.Width;
-    header->mipMapCount = 1;
+    // header->mipMapCount = 1;
+    header->mipMapCount = desc.MipLevels;
     header->caps = DDS_SURFACE_FLAGS_TEXTURE;
 
     // Try to use a legacy .DDS pixel format for better tools support, otherwise fallback to 'DX10' header extension

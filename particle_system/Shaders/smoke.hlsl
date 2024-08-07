@@ -82,7 +82,12 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
 
 float4 PS(GeoOut pIn) : SV_Target
 {
-    return g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    // return g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    float4 dst_color = g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    if (dst_color.r <= 0.1f || dst_color.g <= 0.1f || dst_color.b <= 0.1f) {
+        discard;
+    } 
+    return dst_color;
 }
 
 VertexParticle SO_VS(VertexParticle vIn)

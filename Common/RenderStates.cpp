@@ -23,6 +23,8 @@ ComPtr<ID3D11BlendState> RenderStates::BSAlphaToCoverage		= nullptr;
 ComPtr<ID3D11BlendState> RenderStates::BSTransparent			= nullptr;
 ComPtr<ID3D11BlendState> RenderStates::BSAdditive				= nullptr;
 ComPtr<ID3D11BlendState> RenderStates::BSAlphaWeightedAdditive  = nullptr;
+ComPtr<ID3D11BlendState> RenderStates::BSSub				    = nullptr;
+ComPtr<ID3D11BlendState> RenderStates::BSAlphaWeightedSub       = nullptr;
 
 ComPtr<ID3D11DepthStencilState> RenderStates::DSSEqual          = nullptr;
 ComPtr<ID3D11DepthStencilState> RenderStates::DSSLessEqual      = nullptr;
@@ -110,7 +112,10 @@ void RenderStates::InitAll(ID3D11Device* device)
     sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
     sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.MaxAnisotropy = 0;
+    sampDesc.MaxAnisotropy = 1;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
     HR(device->CreateSamplerState(&sampDesc, SSLinearWrap.GetAddressOf()));
 
     // 16倍各向异性过滤与Wrap模式
@@ -177,6 +182,28 @@ void RenderStates::InitAll(ID3D11Device* device)
     rtDesc.DestBlendAlpha = D3D11_BLEND_ZERO;
     rtDesc.BlendOpAlpha = D3D11_BLEND_OP_ADD;
     HR(device->CreateBlendState(&blendDesc, BSAlphaWeightedAdditive.GetAddressOf()));
+
+    // 减法混合模式
+    // Color = SrcColor - DestColor
+    // Alpha = SrcAlpha - DestAlpha
+    rtDesc.SrcBlend = D3D11_BLEND_ONE;
+    rtDesc.DestBlend = D3D11_BLEND_ONE;
+    rtDesc.BlendOp = D3D11_BLEND_OP_REV_SUBTRACT;
+    rtDesc.SrcBlendAlpha = D3D11_BLEND_ONE;
+    rtDesc.DestBlendAlpha = D3D11_BLEND_ONE;
+    rtDesc.BlendOpAlpha = D3D11_BLEND_OP_REV_SUBTRACT;
+    HR(device->CreateBlendState(&blendDesc, BSSub.GetAddressOf()));
+
+    // 带Alpha权重的减法混合模式
+    // Color = SrcColor - DestColor * DestAlpha
+    // Alpha = SrcAlpha
+    rtDesc.SrcBlend = D3D11_BLEND_ONE;
+    rtDesc.DestBlend = D3D11_BLEND_ONE;
+    rtDesc.BlendOp = D3D11_BLEND_OP_SUBTRACT;
+    rtDesc.SrcBlendAlpha = D3D11_BLEND_ONE;
+    rtDesc.DestBlendAlpha = D3D11_BLEND_ZERO;
+    rtDesc.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    HR(device->CreateBlendState(&blendDesc, BSAlphaWeightedSub.GetAddressOf()));
 
     // ******************
     // 初始化深度/模板状态
