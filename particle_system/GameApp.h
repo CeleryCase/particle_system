@@ -38,6 +38,7 @@ private:
         Boom,
         Fountain,
         Smoke,
+        FireSmoke,
     };
 
     TextureManager m_TextureManager;
@@ -54,6 +55,7 @@ private:
     ParticleManager m_Boom;                                             // 爆炸粒子系统
     ParticleManager m_Fountain;                                         // 喷泉粒子系统
     ParticleManager m_Smoke;                                            // 烟雾粒子系统
+    ParticleManager m_FireSmoke;                                        // 火焰烟雾粒子系统
 
     BasicEffect m_BasicEffect;								            // 对象渲染特效管理
     SkyboxEffect m_SkyboxEffect;                                        // 天空盒特效
@@ -62,6 +64,7 @@ private:
     ParticleEffect m_BoomEffect;                                        // 爆炸特效
     ParticleEffect m_FountainEffect;                                    // 喷泉特效
     ParticleEffect m_SmokeEffect;                                       // 烟雾特效
+    ParticleEffect m_FireSmokeEffect;                                   // 火焰烟雾特效
     ParticleType m_CurrParticleType = ParticleType::Smoke;                                    // 当前显示粒子
 
     std::unique_ptr<Texture2D> m_pLitTexture;                           // 中间场景缓冲区

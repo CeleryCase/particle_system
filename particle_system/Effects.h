@@ -200,6 +200,7 @@ public:
         uint32_t vertexCount = 0);  
     // 绘制粒子系统
     InputData SetRenderDefault();
+    InputData SetRenderSmoke();
 
     void XM_CALLCONV SetViewMatrix(DirectX::FXMMATRIX V);
     void XM_CALLCONV SetProjMatrix(DirectX::FXMMATRIX P);

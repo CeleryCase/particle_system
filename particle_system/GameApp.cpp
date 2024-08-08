@@ -49,6 +49,9 @@ bool GameApp::Init()
     if (!m_SmokeEffect.InitAll(m_pd3dDevice.Get(), L"../../particle_system/Shaders/smoke.hlsl"))
         return false;
 
+    if (!m_FireSmokeEffect.InitAllWithSmoke(m_pd3dDevice.Get(), L"../../particle_system/Shaders/fire_smoke.hlsl"))
+        return false;
+
     if (!InitResource())
         return false;
 
@@ -77,6 +80,7 @@ void GameApp::OnResize()
         m_BoomEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
         m_FountainEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
         m_SmokeEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
+        m_FireSmokeEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
     }
 }
 
@@ -117,6 +121,7 @@ void GameApp::UpdateScene(float dt)
             m_Boom.Reset();
             m_Fountain.Reset();
             m_Smoke.Reset();
+            m_FireSmoke.Reset();
         }        
 
         static int curr_particle_item = 4;
@@ -129,7 +134,8 @@ void GameApp::UpdateScene(float dt)
             "Rain",
             "Boom",
             "Fountain",
-            "Smoke"
+            "Smoke",
+            "FireSmoke"
         };
         if (ImGui::Combo("Particle Type", &curr_particle_item, particle_strs, ARRAYSIZE(particle_strs)))
         {
@@ -140,6 +146,7 @@ void GameApp::UpdateScene(float dt)
                 case ParticleType::Boom: curr_particle = &m_Boom; break;
                 case ParticleType::Fountain: curr_particle = &m_Fountain; break;
                 case ParticleType::Smoke: curr_particle = &m_Smoke; break;
+                case ParticleType::FireSmoke: curr_particle = &m_FireSmoke; break;
                 default: curr_particle = &m_Fountain; break;
             }
             // curr_particle->SetAliveTime(fountainAliveTime);
@@ -188,6 +195,7 @@ void GameApp::UpdateScene(float dt)
     m_Boom.Update(dt, m_Timer.TotalTime());
     m_Fountain.Update(dt, m_Timer.TotalTime());
     m_Smoke.Update(dt, m_Timer.TotalTime());
+    m_FireSmoke.Update(dt, m_Timer.TotalTime());
 
     m_FireEffect.SetViewMatrix(m_pCamera->GetViewMatrixXM());
     m_FireEffect.SetEyePos(m_pCamera->GetPosition());
@@ -200,6 +208,9 @@ void GameApp::UpdateScene(float dt)
 
     m_SmokeEffect.SetViewMatrix(m_pCamera->GetViewMatrixXM());
     m_SmokeEffect.SetEyePos(m_pCamera->GetPosition());
+
+    m_FireSmokeEffect.SetViewMatrix(m_pCamera->GetViewMatrixXM());
+    m_FireSmokeEffect.SetEyePos(m_pCamera->GetPosition());
 
     m_RainEffect.SetViewMatrix(m_pCamera->GetViewMatrixXM());
     m_RainEffect.SetEyePos(m_pCamera->GetPosition());
@@ -280,6 +291,7 @@ void GameApp::DrawScene()
         case ParticleType::Boom: m_Boom.Draw(m_pd3dImmediateContext.Get(), m_BoomEffect); break;
         case ParticleType::Fountain: m_Fountain.Draw(m_pd3dImmediateContext.Get(), m_FountainEffect); break;
         case ParticleType::Smoke: m_Smoke.Draw(m_pd3dImmediateContext.Get(), m_SmokeEffect); break;
+        case ParticleType::FireSmoke: m_FireSmoke.Draw(m_pd3dImmediateContext.Get(), m_FireSmokeEffect); break;
         default: m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect); break;
     }
     // m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect);
@@ -330,6 +342,11 @@ bool GameApp::InitResource()
     m_SmokeEffect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
     m_SmokeEffect.SetViewMatrix(camera->GetViewMatrixXM());
     m_SmokeEffect.SetProjMatrix(camera->GetProjMatrixXM());
+
+    m_FireSmokeEffect.SetBlendState(RenderStates::BSAlphaWeightedAdditive.Get(), blend_factor, 0xFFFFFFFF);
+    m_FireSmokeEffect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
+    m_FireSmokeEffect.SetViewMatrix(camera->GetViewMatrixXM());
+    m_FireSmokeEffect.SetProjMatrix(camera->GetProjMatrixXM());
 
     m_RainEffect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
     m_RainEffect.SetViewMatrix(camera->GetViewMatrixXM());
@@ -487,6 +504,22 @@ bool GameApp::InitResource()
     m_Smoke.SetEmitInterval(0.1f);
     m_Smoke.SetAliveTime(3.0f);
     m_Smoke.SetDebugObjectName("Smoke");
+
+    std::generate(randomValues.begin(), randomValues.end(), [&]() { return randF(randEngine); });
+    HR(m_pd3dDevice->CreateTexture1D(&texDesc, &initData, pRandomTex.ReleaseAndGetAddressOf()));
+    HR(m_pd3dDevice->CreateShaderResourceView(pRandomTex.Get(), nullptr, pRandomTexSRV.ReleaseAndGetAddressOf()));
+    m_TextureManager.AddTexture("FireSmokeRandomTex", pRandomTexSRV.Get());
+
+    m_FireSmoke.InitResource(m_pd3dDevice.Get(), 10000);
+    m_FireSmoke.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\boom.dds"));
+    m_FireSmoke.SetTextureRandom(m_TextureManager.GetTexture("FireSmokeRandomTex"));
+    m_FireSmoke.SetTextureAsh(m_TextureManager.GetTexture("..\\Texture\\ash0.dds"));
+    m_FireSmoke.SetEmitPos(XMFLOAT3(0.0f, -1.0f, 0.0f));
+    m_FireSmoke.SetEmitDir(XMFLOAT3(0.0f, 1.0f, 0.0f));
+    m_FireSmoke.SetAcceleration(XMFLOAT3(0.0f, 7.8f, 0.0f));
+    m_FireSmoke.SetEmitInterval(0.005f);
+    m_FireSmoke.SetAliveTime(1.0f);
+    m_FireSmoke.SetDebugObjectName("FireSmoke");
 
     std::generate(randomValues.begin(), randomValues.end(), [&]() { return randF(randEngine); });
     HR(m_pd3dDevice->CreateTexture1D(&texDesc, &initData, pRandomTex.ReleaseAndGetAddressOf()));

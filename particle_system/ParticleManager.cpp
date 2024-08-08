@@ -124,6 +124,13 @@ void ParticleManager::Draw(ID3D11DeviceContext* deviceContext, ParticleEffect& e
     deviceContext->IASetVertexBuffers(0, 1, m_pDrawVB.GetAddressOf(), &inputData.stride, &inputData.offset);
     effect.Apply(deviceContext);
     deviceContext->DrawAuto();
+
+    inputData = effect.SetRenderSmoke();
+    deviceContext->IASetPrimitiveTopology(inputData.topology);
+    deviceContext->IASetInputLayout(inputData.pInputLayout);
+    deviceContext->IASetVertexBuffers(0, 1, m_pDrawVB.GetAddressOf(), &inputData.stride, &inputData.offset);
+    effect.Apply(deviceContext);
+    deviceContext->DrawAuto();
 }
 
 void ParticleManager::SetDebugObjectName(const std::string& name)

@@ -335,6 +335,16 @@ ParticleEffect::InputData ParticleEffect::SetRenderDefault()
     return res;
 }
 
+ParticleEffect::InputData ParticleEffect::SetRenderSmoke()
+{
+    InputData res{};
+    res.stride = sizeof(ParticleEffect::VertexParticle);
+    res.pInputLayout = pImpl->m_pVertexParticleLayout.Get();
+    res.topology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+    pImpl->m_pCurrEffectPass = pImpl->m_pEffectHelper->GetEffectPass("RenderSmoke");
+    return res;
+}
+
 void XM_CALLCONV ParticleEffect::SetViewMatrix(DirectX::FXMMATRIX V)
 {
     XMStoreFloat4x4(&pImpl->m_View, V);
