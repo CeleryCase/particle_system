@@ -22,6 +22,7 @@ ComPtr<ID3D11SamplerState> RenderStates::SSShadowPCF			= nullptr;
 ComPtr<ID3D11BlendState> RenderStates::BSAlphaToCoverage		= nullptr;
 ComPtr<ID3D11BlendState> RenderStates::BSTransparent			= nullptr;
 ComPtr<ID3D11BlendState> RenderStates::BSAdditive				= nullptr;
+ComPtr<ID3D11BlendState> RenderStates::BSAlphaAdd				= nullptr;
 ComPtr<ID3D11BlendState> RenderStates::BSAlphaWeightedAdditive  = nullptr;
 ComPtr<ID3D11BlendState> RenderStates::BSSub				    = nullptr;
 ComPtr<ID3D11BlendState> RenderStates::BSAlphaWeightedSub       = nullptr;
@@ -194,14 +195,25 @@ void RenderStates::InitAll(ID3D11Device* device)
     rtDesc.BlendOpAlpha = D3D11_BLEND_OP_REV_SUBTRACT;
     HR(device->CreateBlendState(&blendDesc, BSSub.GetAddressOf()));
 
+    // alpha add blend
+    blendDesc.AlphaToCoverageEnable = false;
+    rtDesc.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    rtDesc.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    rtDesc.BlendOp = D3D11_BLEND_OP_ADD;
+    rtDesc.SrcBlendAlpha = D3D11_BLEND_ONE;
+    rtDesc.DestBlendAlpha = D3D11_BLEND_ONE;
+    rtDesc.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    HR(device->CreateBlendState(&blendDesc, BSAlphaAdd.GetAddressOf()));
+
     // 带Alpha权重的减法混合模式
     // Color = SrcColor - DestColor * DestAlpha
     // Alpha = SrcAlpha
-    rtDesc.SrcBlend = D3D11_BLEND_ONE;
-    rtDesc.DestBlend = D3D11_BLEND_ONE;
-    rtDesc.BlendOp = D3D11_BLEND_OP_SUBTRACT;
+    blendDesc.AlphaToCoverageEnable = false;
+    rtDesc.SrcBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    rtDesc.DestBlend = D3D11_BLEND_SRC_ALPHA;
+    rtDesc.BlendOp = D3D11_BLEND_OP_ADD;
     rtDesc.SrcBlendAlpha = D3D11_BLEND_ONE;
-    rtDesc.DestBlendAlpha = D3D11_BLEND_ZERO;
+    rtDesc.DestBlendAlpha = D3D11_BLEND_ONE;
     rtDesc.BlendOpAlpha = D3D11_BLEND_OP_ADD;
     HR(device->CreateBlendState(&blendDesc, BSAlphaWeightedSub.GetAddressOf()));
 

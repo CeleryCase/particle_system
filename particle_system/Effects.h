@@ -190,6 +190,7 @@ public:
     ParticleEffect& operator=(ParticleEffect&& moveFrom) noexcept;
 
     bool InitAll(ID3D11Device* device, std::wstring_view filename);
+    bool InitAllWithSmoke(ID3D11Device* device, std::wstring_view filename);
 
     // vertexCount为0时调用drawAuto
     void RenderToVertexBuffer(

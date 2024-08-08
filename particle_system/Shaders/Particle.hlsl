@@ -59,6 +59,7 @@ float3 RandVec3(float offset)
 #define PT_EMITTER 0
 #define PT_PARTICLE 1
 #define PT_SHELL 2
+#define PT_SMOKE 3
 
 struct VertexParticle
 {

@@ -10,6 +10,7 @@ struct VertexOut
     float2 sizeW : SIZE;
     float4 color : COLOR;
     uint type : TYPE;
+    float age : AGE;
 };
 
 struct GeoOut
@@ -27,14 +28,15 @@ VertexOut VS(VertexParticle vIn)
     float t = vIn.age;
     
     // 恒定加速度等式
-    vOut.posW = 0.5f * t * t * g_AccelW + t * vIn.initialVelW + vIn.initialPosW;
+    vOut.posW = 0.5f * t * t * g_AccelW * vIn.accelW + t * vIn.initialVelW + vIn.initialPosW;
     
     // 颜色随着时间褪去
-    float opacity = 1.0f - smoothstep(0.0f, 1.0f, t / 1.0f);
+    float opacity = 1.0f - smoothstep(0.0f, 5.0f, t);
     vOut.color = float4(1.0f, 1.0f, 1.0f, opacity);
     
     vOut.sizeW = vIn.sizeW;
     vOut.type = vIn.type;
+    vOut.age = vIn.age;
     
     return vOut;
 }
@@ -55,8 +57,10 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
         //
         // 计算出处于世界空间的四边形
         //
-        float halfWidth = 0.5f * gIn[0].sizeW.x;
-        float halfHeight = 0.5f * gIn[0].sizeW.y;
+        // float halfWidth = 0.5f * gIn[0].sizeW.x;
+        // float halfHeight = 0.5f * gIn[0].sizeW.y;
+        float halfWidth = 0.5f * gIn[0].age;
+        float halfHeight = 0.5f * gIn[0].age;
         
         float4 v[4];
         v[0] = float4(gIn[0].posW + halfWidth * right - halfHeight * up, 1.0f);
@@ -64,6 +68,11 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
         v[2] = float4(gIn[0].posW - halfWidth * right - halfHeight * up, 1.0f);
         v[3] = float4(gIn[0].posW - halfWidth * right + halfHeight * up, 1.0f);
     
+
+        // 旋转矩阵
+        float cosAngle = cos(gIn[0].age / 3);
+        float sinAngle = sin(gIn[0].age / 3);
+
         //
         // 将四边形顶点从世界空间变换到齐次裁减空间
         //
@@ -74,6 +83,16 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
             gOut.posH = mul(v[i], g_ViewProj);
             // gOut.tex = float2((float) (i % 2), 1.0f - (i / 2));
             gOut.tex = g_TexCoord[i];
+
+            gOut.tex -= float2(0.5f, 0.5f);
+
+            float2 rotatedTexcoord;
+            rotatedTexcoord.x = cosAngle * gOut.tex.x - sinAngle * gOut.tex.y;
+            rotatedTexcoord.y = sinAngle * gOut.tex.x + cosAngle * gOut.tex.y;
+            gOut.tex = rotatedTexcoord;
+
+            gOut.tex += float2(0.5f, 0.5f);
+
             gOut.color = gIn[0].color;
             output.Append(gOut);
         }
@@ -84,7 +103,7 @@ float4 PS(GeoOut pIn) : SV_Target
 {
     // return g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
     float4 dst_color = g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
-    if (dst_color.r <= 0.1f || dst_color.g <= 0.1f || dst_color.b <= 0.1f) {
+    if (dst_color.r <= 0.11f || dst_color.g <= 0.11f || dst_color.b <= 0.11f) {
         discard;
     } 
     return dst_color;
@@ -106,13 +125,13 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
         if (gIn[0].age > g_EmitInterval)
         {
             float3 vRandom = RandUnitVec3(0.0f);
-            vRandom.x *= 0.5f;
-            vRandom.z *= 0.5f;
+            // vRandom.x *= 0.5f;
+            // vRandom.z *= 0.5f;
             
             VertexParticle p;
             p.initialPosW = g_EmitPosW.xyz;
-            p.initialVelW = 4.0f * vRandom;
-            p.accelW = float3(0.0f, 0.0f, 0.0f);
+            p.initialVelW = float3(0.0f, 0.0f, 0.0f);
+            p.accelW = vRandom;
             p.sizeW = float2(3.0f, 3.0f);
             p.age = 0.0f;
             p.type = PT_PARTICLE;

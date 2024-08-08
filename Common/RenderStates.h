@@ -46,6 +46,7 @@ public:
     static ComPtr<ID3D11BlendState> BSTransparent;		                // 混合状态：透明混合
     static ComPtr<ID3D11BlendState> BSAlphaToCoverage;	                // 混合状态：Alpha-To-Coverage
     static ComPtr<ID3D11BlendState> BSAdditive;			                // 混合状态：加法混合
+    static ComPtr<ID3D11BlendState> BSAlphaAdd;			                // 混合状态：alpha混合
     static ComPtr<ID3D11BlendState> BSAlphaWeightedAdditive;            // 混合状态：带Alpha权重的加法混合模式
     static ComPtr<ID3D11BlendState> BSSub;			                    // 混合状态：加法混合
     static ComPtr<ID3D11BlendState> BSAlphaWeightedSub;                 // 混合状态：带Alpha权重的加法混合模式

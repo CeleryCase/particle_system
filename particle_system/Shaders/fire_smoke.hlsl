@@ -1,5 +1,5 @@
-#ifndef FIRE_HLSL
-#define FIRE_HLSL
+#ifndef FIRE_SMOKE_HLSL
+#define FIRE_SMOKE_HLSL
 
 #include "Particle.hlsl"
 static const float2 g_TexCoord[4] = { float2(0.0f, 1.0f), float2(0.0f, 0.0f), float2(1.0f, 1.0f), float2(1.0f, 0.0f) };
@@ -18,6 +18,7 @@ struct GeoOut
     float4 posH : SV_position;
     float4 color : COLOR;
     float2 tex : TEXCOORD;
+    uint type : TYPE;
 };
 
 
@@ -93,28 +94,26 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
             gOut.tex += float2(0.5f, 0.5f);
 
             gOut.color = gIn[0].color;
+            gOut.type = gIn[0].type;
             output.Append(gOut);
         }
     }
-    //     //
-    //     // 将四边形顶点从世界空间变换到齐次裁减空间
-    //     //
-    //     GeoOut gOut;
-    //     [unroll]
-    //     for (int i = 0; i < 4; ++i)
-    //     {
-    //         gOut.posH = mul(v[i], g_ViewProj);
-    //         // gOut.tex = float2((float) (i % 2), 1.0f - (i / 2));
-    //         gOut.tex = g_TexCoord[i];
-    //         gOut.color = gIn[0].color;
-    //         output.Append(gOut);
-    //     }
-    // }
 }
 
 float4 PS(GeoOut pIn) : SV_Target
 {
+    if (pIn.type != PT_PARTICLE) {
+        discard;
+    }
     return g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
+}
+
+float4 Smoke_PS(GeoOut pIn) : SV_Target
+{
+    if (pIn.type != PT_SMOKE) {
+        discard;
+    }
+    return g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
 }
 
 VertexParticle SO_VS(VertexParticle vIn)
@@ -157,8 +156,15 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
     else
     {
         // 用于限制粒子数目产生的特定条件，对于不同的粒子系统限制也有所变化
-        if (gIn[0].age <= g_AliveTime)
+        if (gIn[0].age <= g_AliveTime) {
+            if (gIn[0].age >= 0.8 * g_AliveTime && gIn[0].emitCount == 0) {
+                gIn[0].emitCount = 1;
+                VertexParticle p = gIn;
+                p.type = PT_SMOKE;
+                output.Append(p);
+            }
             output.Append(gIn[0]);
+        }
     }
 }
 

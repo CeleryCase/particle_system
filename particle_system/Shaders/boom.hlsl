@@ -12,6 +12,7 @@ struct VertexOut
     float2 sizeW : SIZE;
     float4 color : COLOR;
     uint type : TYPE;
+    float age : AGE;
 };
 
 struct GeoOut
@@ -34,7 +35,7 @@ VertexOut VS(VertexParticle vIn)
     }
     
     // 恒定加速度等式
-    vOut.posW = 0.5f * t * t * vIn.accelW * g_AccelW + t * vIn.initialVelW + vIn.initialPosW;
+    vOut.posW = 0.5f * t * t * vIn.accelW + t * vIn.initialVelW + vIn.initialPosW;
     
     // 颜色随着时间褪去
     float opacity = 1.0f - smoothstep(0.0f, 1.0f, t / 1.0 * 2.0f);
@@ -93,7 +94,6 @@ float4 PS(GeoOut pIn) : SV_Target
     if (pIn.type == PT_SHELL)
     {
         return g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
-        // return (0.0f, 0.0f, 0.0f, 0.0f);
     }
     else
     {
