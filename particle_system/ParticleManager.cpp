@@ -124,8 +124,53 @@ void ParticleManager::Draw(ID3D11DeviceContext* deviceContext, ParticleEffect& e
     deviceContext->IASetVertexBuffers(0, 1, m_pDrawVB.GetAddressOf(), &inputData.stride, &inputData.offset);
     effect.Apply(deviceContext);
     deviceContext->DrawAuto();
+}
 
-    inputData = effect.SetRenderSmoke();
+void ParticleManager::DrawWithSmoke(ID3D11DeviceContext* deviceContext, ParticleEffect& effect)
+{
+    effect.SetGameTime(m_GameTime);
+    effect.SetTimeStep(m_TimeStep);
+    effect.SetEmitPos(m_EmitPos);
+    effect.SetEmitDir(m_EmitDir);
+    effect.SetAcceleration(m_Accel);
+    effect.SetEmitInterval(m_EmitInterval);
+    effect.SetAliveTime(m_AliveTime);
+    effect.SetTextureInput(m_pTextureInputSRV.Get());
+    effect.SetTextureRandom(m_pTextureRanfomSRV.Get());
+    effect.SetTextureAsh(m_pTextureAshSRV.Get());
+
+
+    // ******************
+    // 流输出
+    //
+    // 如果是第一次运行，使用初始顶点缓冲区
+    // 否则，使用存有当前所有粒子的顶点缓冲区
+    effect.RenderToVertexBuffer(deviceContext,
+        m_FirstRun ? m_pInitVB.Get() : m_pDrawVB.Get(),
+        m_pStreamOutVB.Get(),
+        m_FirstRun);
+    // 后续转为DrawAuto
+    m_FirstRun = 0;
+
+
+    // 进行顶点缓冲区的Ping-Pong交换
+    m_pDrawVB.Swap(m_pStreamOutVB);
+
+    // ******************
+    // 使用流输出顶点绘制粒子
+    //
+    // effect.SetSmokeBlendState(RenderStates::BSAlphaWeightedSub.Get(), nullptr, 0xFFFFFFFF);
+    // effect.SetSmokeDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
+    auto inputData = effect.SetRenderSmoke();
+    deviceContext->IASetPrimitiveTopology(inputData.topology);
+    deviceContext->IASetInputLayout(inputData.pInputLayout);
+    deviceContext->IASetVertexBuffers(0, 1, m_pDrawVB.GetAddressOf(), &inputData.stride, &inputData.offset);
+    effect.Apply(deviceContext);
+    deviceContext->DrawAuto();
+
+    // effect.SetBlendState(RenderStates::BSAlphaWeightedAdditive.Get(), nullptr, 0xFFFFFFFF);
+    // effect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
+    inputData = effect.SetRenderDefault();
     deviceContext->IASetPrimitiveTopology(inputData.topology);
     deviceContext->IASetInputLayout(inputData.pInputLayout);
     deviceContext->IASetVertexBuffers(0, 1, m_pDrawVB.GetAddressOf(), &inputData.stride, &inputData.offset);

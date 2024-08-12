@@ -108,6 +108,8 @@ public:
     void Walk(float d);
     // 前进(朝前向移动)
     void MoveForward(float d);
+    // 向上移动
+    void MoveUp(float d);
     // 移动
     void Translate(const DirectX::XMFLOAT3& dir, float magnitude);
     // 上下观察

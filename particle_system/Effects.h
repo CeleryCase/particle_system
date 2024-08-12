@@ -226,6 +226,10 @@ public:
     void SetBlendState(ID3D11BlendState* blendState, const float blendFactor[4], uint32_t sampleMask);
     void SetDepthStencilState(ID3D11DepthStencilState* depthStencilState, UINT stencilRef);
 
+    void SetSmokeRasterizerState(ID3D11RasterizerState* rasterizerState);
+    void SetSmokeBlendState(ID3D11BlendState* blendState, const float blendFactor[4], uint32_t sampleMask);
+    void SetSmokeDepthStencilState(ID3D11DepthStencilState* depthStencilState, UINT stencilRef);
+
     // 
     // IEffect
     //

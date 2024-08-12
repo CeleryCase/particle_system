@@ -37,9 +37,6 @@ bool GameApp::Init()
     if (!m_FireEffect.InitAll(m_pd3dDevice.Get(), L"../../particle_system/Shaders/Fire.hlsl"))
         return false;
 
-    if (!m_RainEffect.InitAll(m_pd3dDevice.Get(), L"../../particle_system/Shaders/Rain.hlsl"))
-        return false;
-
     if (!m_BoomEffect.InitAll(m_pd3dDevice.Get(), L"../../particle_system/Shaders/Boom.hlsl"))
         return false;
 
@@ -67,6 +64,7 @@ void GameApp::OnResize()
 
     m_pDepthTexture->SetDebugObjectName("DepthTexture");
     m_pLitTexture->SetDebugObjectName("LitTexture");
+    m_pLitTexture->SetDebugObjectName("ParticleTexture");
 
     // 摄像机变更显示
     if (m_pCamera != nullptr)
@@ -76,7 +74,6 @@ void GameApp::OnResize()
         m_BasicEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
         m_SkyboxEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
         m_FireEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
-        m_RainEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
         m_BoomEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
         m_FountainEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
         m_SmokeEffect.SetProjMatrix(m_pCamera->GetProjMatrixXM());
@@ -93,7 +90,7 @@ void GameApp::UpdateScene(float dt)
     // ******************
     // 第一人称摄像机的操作
     //
-    float d1 = 0.0f, d2 = 0.0f;
+    float d1 = 0.0f, d2 = 0.0f, d3 = 0.0f;
     if (ImGui::IsKeyDown(ImGuiKey_W))
         d1 += dt;
     if (ImGui::IsKeyDown(ImGuiKey_S))
@@ -102,9 +99,14 @@ void GameApp::UpdateScene(float dt)
         d2 -= dt;
     if (ImGui::IsKeyDown(ImGuiKey_D))
         d2 += dt;
+    if (ImGui::IsKeyDown(ImGuiKey_J))
+        d3 += dt;
+    if (ImGui::IsKeyDown(ImGuiKey_K))
+        d3 -= dt;
 
     cam1st->Walk(d1 * 6.0f);
     cam1st->Strafe(d2 * 6.0f);
+    cam1st->MoveUp(d3 * 6.0f);
 
     if (ImGui::IsMouseDragging(ImGuiMouseButton_Right))
     {
@@ -117,40 +119,35 @@ void GameApp::UpdateScene(float dt)
         if (ImGui::Button("Reset Particle"))
         {
             m_Fire.Reset();
-            m_Rain.Reset();
             m_Boom.Reset();
             m_Fountain.Reset();
             m_Smoke.Reset();
             m_FireSmoke.Reset();
         }        
 
-        static int curr_particle_item = 4;
+        static int curr_particle_item = 1;
         static ParticleManager *curr_particle = &m_Smoke;
         static float alive_time = 3.0f;
         static float emit_interval = 0.0015f;
         static DirectX::XMFLOAT3 accel(0.0f, 7.8f, 0.0f);
         const char* particle_strs[] = {
             "Flare",
-            "Rain",
+            "Smoke",
+            "FireSmoke",
             "Boom",
             "Fountain",
-            "Smoke",
-            "FireSmoke"
         };
         if (ImGui::Combo("Particle Type", &curr_particle_item, particle_strs, ARRAYSIZE(particle_strs)))
         {
             m_CurrParticleType = static_cast<ParticleType>(curr_particle_item);
             switch (m_CurrParticleType) {
                 case ParticleType::Fire: curr_particle = &m_Fire; break;
-                case ParticleType::Rain: curr_particle = &m_Rain; break;
                 case ParticleType::Boom: curr_particle = &m_Boom; break;
                 case ParticleType::Fountain: curr_particle = &m_Fountain; break;
                 case ParticleType::Smoke: curr_particle = &m_Smoke; break;
                 case ParticleType::FireSmoke: curr_particle = &m_FireSmoke; break;
                 default: curr_particle = &m_Fountain; break;
             }
-            // curr_particle->SetAliveTime(fountainAliveTime);
-            // curr_particle->SetEmitInterval(fountainEmitInterval);
         }                                                                            
         if (ImGui::SliderFloat("Emit Interval", &emit_interval, 0.0f, 1.0f, "%.4f"))
         {
@@ -191,7 +188,6 @@ void GameApp::UpdateScene(float dt)
     // 粒子系统
     //
     m_Fire.Update(dt, m_Timer.TotalTime());
-    m_Rain.Update(dt, m_Timer.TotalTime());
     m_Boom.Update(dt, m_Timer.TotalTime());
     m_Fountain.Update(dt, m_Timer.TotalTime());
     m_Smoke.Update(dt, m_Timer.TotalTime());
@@ -212,20 +208,20 @@ void GameApp::UpdateScene(float dt)
     m_FireSmokeEffect.SetViewMatrix(m_pCamera->GetViewMatrixXM());
     m_FireSmokeEffect.SetEyePos(m_pCamera->GetPosition());
 
-    m_RainEffect.SetViewMatrix(m_pCamera->GetViewMatrixXM());
-    m_RainEffect.SetEyePos(m_pCamera->GetPosition());
+    // m_RainEffect.SetViewMatrix(m_pCamera->GetViewMatrixXM());
+    // m_RainEffect.SetEyePos(m_pCamera->GetPosition());
 
-    static XMFLOAT3 lastCameraPos = m_pCamera->GetPosition();
-    XMFLOAT3 cameraPos = m_pCamera->GetPosition();
+    // static XMFLOAT3 lastCameraPos = m_pCamera->GetPosition();
+    // XMFLOAT3 cameraPos = m_pCamera->GetPosition();
 
-    XMVECTOR cameraPosVec = XMLoadFloat3(&cameraPos);
-    XMVECTOR lastCameraPosVec = XMLoadFloat3(&lastCameraPos);
-    XMFLOAT3 emitPos;
-    XMStoreFloat3(&emitPos, cameraPosVec + 3.0f * (cameraPosVec - lastCameraPosVec));
-    m_RainEffect.SetViewMatrix(m_pCamera->GetViewMatrixXM());
-    m_RainEffect.SetEyePos(m_pCamera->GetPosition());
-    m_Rain.SetEmitPos(emitPos);
-    lastCameraPos = m_pCamera->GetPosition();
+    // XMVECTOR cameraPosVec = XMLoadFloat3(&cameraPos);
+    // XMVECTOR lastCameraPosVec = XMLoadFloat3(&lastCameraPos);
+    // XMFLOAT3 emitPos;
+    // XMStoreFloat3(&emitPos, cameraPosVec + 3.0f * (cameraPosVec - lastCameraPosVec));
+    // m_RainEffect.SetViewMatrix(m_pCamera->GetViewMatrixXM());
+    // m_RainEffect.SetEyePos(m_pCamera->GetPosition());
+    // m_Rain.SetEmitPos(emitPos);
+    // lastCameraPos = m_pCamera->GetPosition();
 }
 
 void GameApp::DrawScene()
@@ -244,7 +240,8 @@ void GameApp::DrawScene()
     //
     
     float black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    m_pd3dImmediateContext->ClearRenderTargetView(m_pLitTexture->GetRenderTarget(), black);
+    float white[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    m_pd3dImmediateContext->ClearRenderTargetView(m_pLitTexture->GetRenderTarget(), white);
     m_pd3dImmediateContext->ClearDepthStencilView(m_pDepthTexture->GetDepthStencil(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     ID3D11RenderTargetView* pRTVs[]{ m_pLitTexture->GetRenderTarget() };
     // ID3D11RenderTargetView* pRTVs[]{ nullptr};
@@ -255,8 +252,8 @@ void GameApp::DrawScene()
 
     // m_BasicEffect.DrawInstanced(m_pd3dImmediateContext.Get(), *m_pInstancedBuffer, m_Trees, 144);
     // // 绘制地面
-    m_BasicEffect.SetRenderDefault();
-    m_Ground.Draw(m_pd3dImmediateContext.Get(), m_BasicEffect);
+    // m_BasicEffect.SetRenderDefault();
+    // m_Ground.Draw(m_pd3dImmediateContext.Get(), m_BasicEffect);
 
     // ******************
     // 绘制天空盒
@@ -276,22 +273,20 @@ void GameApp::DrawScene()
     // 粒子系统留在最后绘制便于混合
     //
     // 只显示粒子效果
-    // m_pd3dImmediateContext->ClearRenderTargetView(GetBackBufferRTV(), black);
+    // m_pd3dImmediateContext->ClearRenderTargetView(GetBackBufferRTV(), white);
 
     m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, m_pDepthTexture->GetDepthStencil());
     // m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect);
     // m_Smoke.Draw(m_pd3dImmediateContext.Get(), m_SmokeEffect);
-    // m_Rain.Draw(m_pd3dImmediateContext.Get(), m_RainEffect);
     // m_Boom.Draw(m_pd3dImmediateContext.Get(), m_BoomEffect);
     // m_Fountain.Draw(m_pd3dImmediateContext.Get(), m_FountainEffect);
 
     switch (m_CurrParticleType) {
         case ParticleType::Fire: m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect); break;
-        case ParticleType::Rain: m_Rain.Draw(m_pd3dImmediateContext.Get(), m_RainEffect); break;
         case ParticleType::Boom: m_Boom.Draw(m_pd3dImmediateContext.Get(), m_BoomEffect); break;
         case ParticleType::Fountain: m_Fountain.Draw(m_pd3dImmediateContext.Get(), m_FountainEffect); break;
         case ParticleType::Smoke: m_Smoke.Draw(m_pd3dImmediateContext.Get(), m_SmokeEffect); break;
-        case ParticleType::FireSmoke: m_FireSmoke.Draw(m_pd3dImmediateContext.Get(), m_FireSmokeEffect); break;
+        case ParticleType::FireSmoke: m_FireSmoke.DrawWithSmoke(m_pd3dImmediateContext.Get(), m_FireSmokeEffect); break;
         default: m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect); break;
     }
     // m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect);
@@ -313,7 +308,7 @@ bool GameApp::InitResource()
 
     camera->SetViewPort(0.0f, 0.0f, (float)m_ClientWidth, (float)m_ClientHeight);
     camera->SetFrustum(XM_PI / 3, AspectRatio(), 1.0f, 1000.0f);
-    camera->LookTo(XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
+    camera->LookTo(XMFLOAT3(0.0f, 0.0f, -15.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
 
     // ******************
     // 初始化特效
@@ -337,20 +332,18 @@ bool GameApp::InitResource()
     m_FountainEffect.SetViewMatrix(camera->GetViewMatrixXM());
     m_FountainEffect.SetProjMatrix(camera->GetProjMatrixXM());
 
-    float blend_factor[4] = {0.02f, 0.02f, 0.02f, 0.02f};
-    m_SmokeEffect.SetBlendState(RenderStates::BSAlphaWeightedSub.Get(), blend_factor, 0xFFFFFFFF);
+    // float blend_factor[4] = {0.02f, 0.02f, 0.02f, 0.02f};
+    m_SmokeEffect.SetBlendState(RenderStates::BSInvMul.Get(), nullptr, 0xFFFFFFFF);
     m_SmokeEffect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
     m_SmokeEffect.SetViewMatrix(camera->GetViewMatrixXM());
     m_SmokeEffect.SetProjMatrix(camera->GetProjMatrixXM());
 
-    m_FireSmokeEffect.SetBlendState(RenderStates::BSAlphaWeightedAdditive.Get(), blend_factor, 0xFFFFFFFF);
+    m_FireSmokeEffect.SetBlendState(RenderStates::BSAlphaWeightedAdditive.Get(), nullptr, 0xFFFFFFFF);
     m_FireSmokeEffect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
+    m_FireSmokeEffect.SetSmokeBlendState(RenderStates::BSInvMul.Get(), nullptr, 0xFFFFFFFF);
+    m_FireSmokeEffect.SetSmokeDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
     m_FireSmokeEffect.SetViewMatrix(camera->GetViewMatrixXM());
     m_FireSmokeEffect.SetProjMatrix(camera->GetProjMatrixXM());
-
-    m_RainEffect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
-    m_RainEffect.SetViewMatrix(camera->GetViewMatrixXM());
-    m_RainEffect.SetProjMatrix(camera->GetProjMatrixXM());
 
     m_SkyboxEffect.SetViewMatrix(camera->GetViewMatrixXM());
     m_SkyboxEffect.SetProjMatrix(camera->GetProjMatrixXM());
@@ -417,7 +410,6 @@ bool GameApp::InitResource()
     HR(m_pd3dDevice->CreateTexture1D(&texDesc, &initData, pRandomTex.ReleaseAndGetAddressOf()));
     HR(m_pd3dDevice->CreateShaderResourceView(pRandomTex.Get(), nullptr, pRandomTexSRV.ReleaseAndGetAddressOf()));
     m_TextureManager.AddTexture("FireRandomTex", pRandomTexSRV.Get());
-
     m_Fire.InitResource(m_pd3dDevice.Get(), 10000);
     m_Fire.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\boom.dds"));
     m_Fire.SetTextureRandom(m_TextureManager.GetTexture("FireRandomTex"));
@@ -501,8 +493,8 @@ bool GameApp::InitResource()
     m_Smoke.SetEmitPos(XMFLOAT3(0.0f, -1.0f, 0.0f));
     m_Smoke.SetEmitDir(XMFLOAT3(0.0f, 1.0f, 0.0f));
     m_Smoke.SetAcceleration(XMFLOAT3(1.0f, 1.0f, 1.0f));
-    m_Smoke.SetEmitInterval(0.1f);
-    m_Smoke.SetAliveTime(3.0f);
+    m_Smoke.SetEmitInterval(0.3f);
+    m_Smoke.SetAliveTime(5.0f);
     m_Smoke.SetDebugObjectName("Smoke");
 
     std::generate(randomValues.begin(), randomValues.end(), [&]() { return randF(randEngine); });
@@ -513,7 +505,7 @@ bool GameApp::InitResource()
     m_FireSmoke.InitResource(m_pd3dDevice.Get(), 10000);
     m_FireSmoke.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\boom.dds"));
     m_FireSmoke.SetTextureRandom(m_TextureManager.GetTexture("FireSmokeRandomTex"));
-    m_FireSmoke.SetTextureAsh(m_TextureManager.GetTexture("..\\Texture\\ash0.dds"));
+    m_FireSmoke.SetTextureAsh(m_TextureManager.GetTexture("..\\Texture\\smoke_01.dds"));
     m_FireSmoke.SetEmitPos(XMFLOAT3(0.0f, -1.0f, 0.0f));
     m_FireSmoke.SetEmitDir(XMFLOAT3(0.0f, 1.0f, 0.0f));
     m_FireSmoke.SetAcceleration(XMFLOAT3(0.0f, 7.8f, 0.0f));
@@ -521,21 +513,6 @@ bool GameApp::InitResource()
     m_FireSmoke.SetAliveTime(1.0f);
     m_FireSmoke.SetDebugObjectName("FireSmoke");
 
-    std::generate(randomValues.begin(), randomValues.end(), [&]() { return randF(randEngine); });
-    HR(m_pd3dDevice->CreateTexture1D(&texDesc, &initData, pRandomTex.ReleaseAndGetAddressOf()));
-    HR(m_pd3dDevice->CreateShaderResourceView(pRandomTex.Get(), nullptr, pRandomTexSRV.ReleaseAndGetAddressOf()));
-    m_TextureManager.AddTexture("RainRandomTex", pRandomTexSRV.Get());
-
-    m_Rain.InitResource(m_pd3dDevice.Get(), 10000);
-    m_Rain.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\raindrop.dds"));
-    m_Rain.SetTextureRandom(m_TextureManager.GetTexture("RainRandomTex"));
-    m_Rain.SetEmitDir(XMFLOAT3(0.0f, -1.0f, 0.0f));
-    m_Rain.SetAcceleration(XMFLOAT3(-1.0f, -9.8f, 0.0f));
-    m_Rain.SetEmitInterval(0.0015f);
-    m_Rain.SetAliveTime(3.0f);
-    m_Rain.SetDebugObjectName("Rain");
-
-    
     // ******************
     // 初始化光照
     //

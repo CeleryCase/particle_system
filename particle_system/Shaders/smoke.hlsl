@@ -32,8 +32,8 @@ VertexOut VS(VertexParticle vIn)
     
     // 颜色随着时间褪去
     float opacity = 1.0f - smoothstep(0.0f, 5.0f, t);
-    vOut.color = float4(1.0f, 1.0f, 1.0f, opacity);
-    
+    opacity = 0.5f;
+    vOut.color = float4(0.5f, 0.5f, 0.5f, opacity);
     vOut.sizeW = vIn.sizeW;
     vOut.type = vIn.type;
     vOut.age = vIn.age;
@@ -59,8 +59,8 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
         //
         // float halfWidth = 0.5f * gIn[0].sizeW.x;
         // float halfHeight = 0.5f * gIn[0].sizeW.y;
-        float halfWidth = 0.5f * gIn[0].age;
-        float halfHeight = 0.5f * gIn[0].age;
+        float halfWidth = 0.5f * gIn[0].age / 2 + 0.1f;
+        float halfHeight = 0.5f * gIn[0].age / 2 + 0.1f;
         
         float4 v[4];
         v[0] = float4(gIn[0].posW + halfWidth * right - halfHeight * up, 1.0f);
@@ -101,12 +101,14 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
 
 float4 PS(GeoOut pIn) : SV_Target
 {
-    // return g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
-    float4 dst_color = g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
-    if (dst_color.r <= 0.11f || dst_color.g <= 0.11f || dst_color.b <= 0.11f) {
-        discard;
-    } 
-    return dst_color;
+    return g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    // float4 dst_color = g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    // if (dst_color.r <= 0.11f || dst_color.g <= 0.11f || dst_color.b <= 0.11f) {
+    //     // discard;
+    //     dst_color.rgb = float3(1.0f, 1.0f, 1.0f);
+    // } 
+    // return dst_color;
+    // return pIn.color;
 }
 
 VertexParticle SO_VS(VertexParticle vIn)

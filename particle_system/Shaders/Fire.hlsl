@@ -96,20 +96,6 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
             output.Append(gOut);
         }
     }
-    //     //
-    //     // 将四边形顶点从世界空间变换到齐次裁减空间
-    //     //
-    //     GeoOut gOut;
-    //     [unroll]
-    //     for (int i = 0; i < 4; ++i)
-    //     {
-    //         gOut.posH = mul(v[i], g_ViewProj);
-    //         // gOut.tex = float2((float) (i % 2), 1.0f - (i / 2));
-    //         gOut.tex = g_TexCoord[i];
-    //         gOut.color = gIn[0].color;
-    //         output.Append(gOut);
-    //     }
-    // }
 }
 
 float4 PS(GeoOut pIn) : SV_Target

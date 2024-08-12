@@ -34,11 +34,10 @@ private:
 
     enum class ParticleType {
         Fire = 0,
-        Rain,
-        Boom,
-        Fountain,
         Smoke,
         FireSmoke,
+        Boom,
+        Fountain,
     };
 
     TextureManager m_TextureManager;
@@ -50,7 +49,6 @@ private:
     GameObject m_Ground;										        // 地面                 
     std::unique_ptr<Buffer> m_pInstancedBuffer;                         // 树的实例缓冲区
     GameObject m_Skybox;                                                // 天空盒
-    ParticleManager m_Rain;                                             // 雨水粒子系统
     ParticleManager m_Fire;                                             // 火焰粒子系统
     ParticleManager m_Boom;                                             // 爆炸粒子系统
     ParticleManager m_Fountain;                                         // 喷泉粒子系统
@@ -59,7 +57,6 @@ private:
 
     BasicEffect m_BasicEffect;								            // 对象渲染特效管理
     SkyboxEffect m_SkyboxEffect;                                        // 天空盒特效
-    ParticleEffect m_RainEffect;                                        // 雨水特效
     ParticleEffect m_FireEffect;                                        // 火焰特效
     ParticleEffect m_BoomEffect;                                        // 爆炸特效
     ParticleEffect m_FountainEffect;                                    // 喷泉特效

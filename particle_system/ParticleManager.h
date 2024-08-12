@@ -44,6 +44,7 @@ public:
     void Reset();
     void Update(float dt, float gameTime);
     void Draw(ID3D11DeviceContext* deviceContext, ParticleEffect& effect);
+    void DrawWithSmoke(ID3D11DeviceContext* deviceContext, ParticleEffect& effect);
 
     void SetDebugObjectName(const std::string& name);
 

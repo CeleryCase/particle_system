@@ -50,6 +50,7 @@ public:
     static ComPtr<ID3D11BlendState> BSAlphaWeightedAdditive;            // 混合状态：带Alpha权重的加法混合模式
     static ComPtr<ID3D11BlendState> BSSub;			                    // 混合状态：加法混合
     static ComPtr<ID3D11BlendState> BSAlphaWeightedSub;                 // 混合状态：带Alpha权重的加法混合模式
+    static ComPtr<ID3D11BlendState> BSInvMul;                           // 混合状态：混合乘法
 
 
     static ComPtr<ID3D11DepthStencilState> DSSEqual;					// 深度/模板状态：仅允许绘制深度值相等的像素

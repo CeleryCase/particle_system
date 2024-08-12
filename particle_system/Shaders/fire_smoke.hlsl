@@ -28,11 +28,17 @@ VertexOut VS(VertexParticle vIn)
     
     float t = vIn.age;
     
+    float opacity;
     // 恒定加速度等式
-    vOut.posW = 0.5f * t * t * g_AccelW + t * vIn.initialVelW + vIn.initialPosW;
+    if (vIn.type == PT_PARTICLE) {
+        vOut.posW = 0.5f * t * t * g_AccelW + t * vIn.initialVelW + vIn.initialPosW;
+        opacity = 1.0f - smoothstep(0.0f, 2.0f, t / 1.0f);
+    } else if (vIn.type == PT_SMOKE) {
+        vOut.posW = 0.5f * t * t * g_AccelW / 5 + t * vIn.initialVelW + vIn.initialPosW;
+        opacity = 1.0f - smoothstep(0.0f, 10.0f, t / 1.0f);
+    }
     
     // 颜色随着时间褪去
-    float opacity = 1.0f - smoothstep(0.0f, 1.0f, t / 1.0f);
     vOut.color = float4(1.0f, 1.0f, 1.0f, opacity);
     
     vOut.sizeW = vIn.sizeW;
@@ -114,6 +120,11 @@ float4 Smoke_PS(GeoOut pIn) : SV_Target
         discard;
     }
     return g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    // float4 dst_color = g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    // if (dst_color.r <= 0.05f || dst_color.g <= 0.05f || dst_color.b <= 0.05f) {
+    //     discard;
+    // } 
+    // return dst_color;
 }
 
 VertexParticle SO_VS(VertexParticle vIn)
@@ -153,16 +164,33 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
         // 总是保留发射器
         output.Append(gIn[0]);
     }
-    else
+    else if (gIn[0].type == PT_PARTICLE)
     {
         // 用于限制粒子数目产生的特定条件，对于不同的粒子系统限制也有所变化
         if (gIn[0].age <= g_AliveTime) {
             if (gIn[0].age >= 0.8 * g_AliveTime && gIn[0].emitCount == 0) {
                 gIn[0].emitCount = 1;
-                VertexParticle p = gIn;
+                float t = gIn[0].age;
+                float3 vRandom = RandUnitVec3(0.0f);
+                vRandom.x *= 0.5f;
+                vRandom.z *= 0.5f;
+                // 恒定加速度等式
+                VertexParticle p;
+                p.initialPosW = 0.5f * t * t * g_AccelW + t * gIn[0].initialVelW + gIn[0].initialPosW;
+                p.initialVelW = vRandom;
+                p.accelW = float3(0.0f, 0.0f, 0.0f);
+                p.sizeW = float2(3.0f, 3.0f);
+                p.age = 0.0f;
                 p.type = PT_SMOKE;
+                p.emitCount = 0;
                 output.Append(p);
             }
+            output.Append(gIn[0]);
+        }
+    }
+    else
+    {
+        if (gIn[0].age <= g_AliveTime * 3.0) {
             output.Append(gIn[0]);
         }
     }
