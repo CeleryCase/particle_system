@@ -106,6 +106,55 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
     }
 }
 
+[maxvertexcount(4)]
+void BackBuffer_GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
+{
+    // 不要绘制用于产生粒子的顶点
+    if (gIn[0].type != PT_EMITTER)
+    {
+        //
+        // 计算该粒子的世界矩阵让公告板朝向摄像机
+        //
+        float3 look = normalize(g_EyePosW.xyz - gIn[0].posW);
+        float3 right = normalize(cross(float3(0.0f, 1.0f, 0.0f), look));
+        float3 up = cross(look, right);
+        
+        //
+        // 计算出处于世界空间的四边形
+        //
+        // float halfWidth = 0.5f * gIn[0].sizeW.x;
+        // float halfHeight = 0.5f * gIn[0].sizeW.y;
+        float halfWidth = 0.5f * gIn[0].sizeW.x - gIn[0].age * 0.2f;
+        float halfHeight = 0.5f * gIn[0].sizeW.y - gIn[0].age * 0.2f;
+        
+        float4 v[4];
+        // v[0] = float4(gIn[0].posW + halfWidth * right - halfHeight * up, 1.0f);
+        // v[1] = float4(gIn[0].posW + halfWidth * right + halfHeight * up, 1.0f);
+        // v[2] = float4(gIn[0].posW - halfWidth * right - halfHeight * up, 1.0f);
+        // v[3] = float4(gIn[0].posW - halfWidth * right + halfHeight * up, 1.0f);
+
+        v[2] = float4(gIn[0].posW + halfWidth * right - halfHeight * up, 1.0f);
+        v[0] = float4(gIn[0].posW + halfWidth * right + halfHeight * up, 1.0f);
+        v[3] = float4(gIn[0].posW - halfWidth * right - halfHeight * up, 1.0f);
+        v[1] = float4(gIn[0].posW - halfWidth * right + halfHeight * up, 1.0f);
+    
+        //
+        // 将四边形顶点从世界空间变换到齐次裁减空间
+        //
+        GeoOut gOut;
+        [unroll]
+        for (int i = 0; i < 4; ++i)
+        {
+            gOut.posH = mul(v[i], g_ViewProj);
+            gOut.tex = gOut.posH.xy / gOut.posH.w * 0.5 + 0.5;
+
+            gOut.color = gIn[0].color;
+            gOut.type = gIn[0].type;
+            output.Append(gOut);
+        }
+    }
+}
+
 float4 PS(GeoOut pIn) : SV_Target
 {
     if (pIn.type != PT_PARTICLE) {
@@ -119,12 +168,26 @@ float4 Smoke_PS(GeoOut pIn) : SV_Target
     if (pIn.type != PT_SMOKE) {
         discard;
     }
-    return g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
-    // float4 dst_color = g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
-    // if (dst_color.r <= 0.05f || dst_color.g <= 0.05f || dst_color.b <= 0.05f) {
-    //     discard;
-    // } 
-    // return dst_color;
+    // return g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    float4 dst_color = g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    if (dst_color.r <= 0.05f || dst_color.g <= 0.05f || dst_color.b <= 0.05f) {
+        discard;
+    } 
+    return dst_color;
+}
+
+float4 BackBuffer_PS(GeoOut pIn) : SV_Target
+{
+    // float2 ndcPos = pIn.posH.xy / pIn.posH.w;
+
+    // float2 viewportPos = (ndcPos * 0.5 + 0.5) * float2(1280, 720);
+
+
+    float4 defaultParticleColor = g_TextureDefaultParticle.Sample(g_SamLinear, pIn.tex);
+    float4 smokeParticleColor = g_TextureSmokeParticle.Sample(g_SamLinear, pIn.tex);
+
+    // return defaultParticleColor * defaultParticleColor.a + smokeParticleColor * smokeParticleColor.a;
+    return smokeParticleColor;
 }
 
 VertexParticle SO_VS(VertexParticle vIn)

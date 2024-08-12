@@ -256,14 +256,20 @@ bool ParticleEffect::InitAllWithSmoke(ID3D11Device* device, std::wstring_view fi
     HR(pImpl->m_pEffectHelper->CreateShaderFromFile((stem.string() + "_GS"), filename,
         device, "GS", "gs_5_0"));
 
+    HR(pImpl->m_pEffectHelper->CreateShaderFromFile((stem.string() + "_BackBuffer_GS"), filename,
+        device, "BackBuffer_GS", "gs_5_0"));
+
     // ******************
     // 创建像素着色器
     //
     HR(pImpl->m_pEffectHelper->CreateShaderFromFile((stem.string() + "_PS"), filename,
         device, "PS", "ps_5_0"));
 
-    HR(pImpl->m_pEffectHelper->CreateShaderFromFile((stem.string() + "Smoke_PS"), filename,
+    HR(pImpl->m_pEffectHelper->CreateShaderFromFile((stem.string() + "_Smoke_PS"), filename,
         device, "Smoke_PS", "ps_5_0"));
+
+    HR(pImpl->m_pEffectHelper->CreateShaderFromFile((stem.string() + "_BackBuffer_PS"), filename,
+        device, "BackBuffer_PS", "ps_5_0"));
     // ******************
     // 创建通道
     //
@@ -277,9 +283,15 @@ bool ParticleEffect::InitAllWithSmoke(ID3D11Device* device, std::wstring_view fi
     passDesc.namePS = namePS;
     HR(pImpl->m_pEffectHelper->AddEffectPass("Render", device, &passDesc));
 
-    namePS = stem.string() + "Smoke_PS";
+    namePS = stem.string() + "_Smoke_PS";
     passDesc.namePS = namePS;
     HR(pImpl->m_pEffectHelper->AddEffectPass("RenderSmoke", device, &passDesc));
+
+    nameGS = stem.string() + "_BackBuffer_GS";
+    namePS = stem.string() + "_BackBuffer_PS";
+    passDesc.nameGS = nameGS;
+    passDesc.namePS = namePS;
+    HR(pImpl->m_pEffectHelper->AddEffectPass("RenderToBackBuffer", device, &passDesc));
 
     nameVS = stem.string() + "_SO_VS";
     nameGS = stem.string() + "_SO_GS";
@@ -342,6 +354,16 @@ ParticleEffect::InputData ParticleEffect::SetRenderSmoke()
     res.pInputLayout = pImpl->m_pVertexParticleLayout.Get();
     res.topology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
     pImpl->m_pCurrEffectPass = pImpl->m_pEffectHelper->GetEffectPass("RenderSmoke");
+    return res;
+}
+
+ParticleEffect::InputData ParticleEffect::SetRenderToBackBuffer()
+{
+    InputData res{};
+    res.stride = sizeof(ParticleEffect::VertexParticle);
+    res.pInputLayout = pImpl->m_pVertexParticleLayout.Get();
+    res.topology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+    pImpl->m_pCurrEffectPass = pImpl->m_pEffectHelper->GetEffectPass("RenderToBackBuffer");
     return res;
 }
 
@@ -408,6 +430,16 @@ void ParticleEffect::SetTextureRandom(ID3D11ShaderResourceView* textureRandom)
 void ParticleEffect::SetTextureAsh(ID3D11ShaderResourceView* textureAsh)
 {
     pImpl->m_pEffectHelper->SetShaderResourceByName("g_TextureAsh", textureAsh);
+}
+
+void ParticleEffect::SetTextureDefaultParticle(ID3D11ShaderResourceView* textureDefaultParticle)
+{
+    pImpl->m_pEffectHelper->SetShaderResourceByName("g_TextureDefaultParticle", textureDefaultParticle);
+}
+
+void ParticleEffect::SetTextureSmokeParticle(ID3D11ShaderResourceView* textureSmokeParticle)
+{
+    pImpl->m_pEffectHelper->SetShaderResourceByName("g_TextureSmokeParticle", textureSmokeParticle);
 }
 
 void ParticleEffect::SetRasterizerState(ID3D11RasterizerState* rasterizerState)

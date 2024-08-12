@@ -64,7 +64,11 @@ void GameApp::OnResize()
 
     m_pDepthTexture->SetDebugObjectName("DepthTexture");
     m_pLitTexture->SetDebugObjectName("LitTexture");
-    m_pLitTexture->SetDebugObjectName("ParticleTexture");
+
+    m_FireSmoke.pDefaultParticleTexture = std::make_unique<Texture2D>(m_pd3dDevice.Get(), m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_FireSmoke.pSmokeParticleTexture = std::make_unique<Texture2D>(m_pd3dDevice.Get(), m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_FireSmoke.pDefaultParticleTexture->SetDebugObjectName("DefaultParticleTexture");
+    m_FireSmoke.pSmokeParticleTexture->SetDebugObjectName("SmokeParticleTexture");
 
     // 摄像机变更显示
     if (m_pCamera != nullptr)
@@ -241,6 +245,7 @@ void GameApp::DrawScene()
     
     float black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
     float white[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    float green[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
     m_pd3dImmediateContext->ClearRenderTargetView(m_pLitTexture->GetRenderTarget(), white);
     m_pd3dImmediateContext->ClearDepthStencilView(m_pDepthTexture->GetDepthStencil(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     ID3D11RenderTargetView* pRTVs[]{ m_pLitTexture->GetRenderTarget() };
@@ -273,13 +278,15 @@ void GameApp::DrawScene()
     // 粒子系统留在最后绘制便于混合
     //
     // 只显示粒子效果
-    // m_pd3dImmediateContext->ClearRenderTargetView(GetBackBufferRTV(), white);
+    m_pd3dImmediateContext->ClearRenderTargetView(GetBackBufferRTV(), green);
 
     m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, m_pDepthTexture->GetDepthStencil());
     // m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect);
     // m_Smoke.Draw(m_pd3dImmediateContext.Get(), m_SmokeEffect);
     // m_Boom.Draw(m_pd3dImmediateContext.Get(), m_BoomEffect);
     // m_Fountain.Draw(m_pd3dImmediateContext.Get(), m_FountainEffect);
+
+    m_FireSmoke.pCurrBackBuffer = GetBackBufferRTV();
 
     switch (m_CurrParticleType) {
         case ParticleType::Fire: m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect); break;
@@ -332,7 +339,6 @@ bool GameApp::InitResource()
     m_FountainEffect.SetViewMatrix(camera->GetViewMatrixXM());
     m_FountainEffect.SetProjMatrix(camera->GetProjMatrixXM());
 
-    // float blend_factor[4] = {0.02f, 0.02f, 0.02f, 0.02f};
     m_SmokeEffect.SetBlendState(RenderStates::BSInvMul.Get(), nullptr, 0xFFFFFFFF);
     m_SmokeEffect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
     m_SmokeEffect.SetViewMatrix(camera->GetViewMatrixXM());

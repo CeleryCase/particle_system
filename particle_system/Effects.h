@@ -201,6 +201,7 @@ public:
     // 绘制粒子系统
     InputData SetRenderDefault();
     InputData SetRenderSmoke();
+    InputData SetRenderToBackBuffer();
 
     void XM_CALLCONV SetViewMatrix(DirectX::FXMMATRIX V);
     void XM_CALLCONV SetProjMatrix(DirectX::FXMMATRIX P);
@@ -221,6 +222,8 @@ public:
     void SetTextureInput(ID3D11ShaderResourceView* textureInput);
     void SetTextureRandom(ID3D11ShaderResourceView* textureRandom);
     void SetTextureAsh(ID3D11ShaderResourceView* textureAsh);
+    void SetTextureDefaultParticle(ID3D11ShaderResourceView* textureDefaultParticle);
+    void SetTextureSmokeParticle(ID3D11ShaderResourceView* textureSmokeParticle);
 
     void SetRasterizerState(ID3D11RasterizerState* rasterizerState);
     void SetBlendState(ID3D11BlendState* blendState, const float blendFactor[4], uint32_t sampleMask);

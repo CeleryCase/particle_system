@@ -128,6 +128,8 @@ void ParticleManager::Draw(ID3D11DeviceContext* deviceContext, ParticleEffect& e
 
 void ParticleManager::DrawWithSmoke(ID3D11DeviceContext* deviceContext, ParticleEffect& effect)
 {
+    ID3D11RenderTargetView* pRTVs[]{ pDefaultParticleTexture->GetRenderTarget() };
+
     effect.SetGameTime(m_GameTime);
     effect.SetTimeStep(m_TimeStep);
     effect.SetEmitPos(m_EmitPos);
@@ -138,6 +140,10 @@ void ParticleManager::DrawWithSmoke(ID3D11DeviceContext* deviceContext, Particle
     effect.SetTextureInput(m_pTextureInputSRV.Get());
     effect.SetTextureRandom(m_pTextureRanfomSRV.Get());
     effect.SetTextureAsh(m_pTextureAshSRV.Get());
+    // effect.SetTextureDefaultParticle(m_pDefaultParticleTexture->GetShaderResource());
+    // effect.SetTextureSmokeParticle(m_pSmokeParticleTexture->GetShaderResource());
+    effect.SetTextureDefaultParticle(nullptr);
+    effect.SetTextureSmokeParticle(nullptr);
 
 
     // ******************
@@ -159,9 +165,26 @@ void ParticleManager::DrawWithSmoke(ID3D11DeviceContext* deviceContext, Particle
     // ******************
     // 使用流输出顶点绘制粒子
     //
-    // effect.SetSmokeBlendState(RenderStates::BSAlphaWeightedSub.Get(), nullptr, 0xFFFFFFFF);
-    // effect.SetSmokeDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
+    float black[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    float green[4] = {0.0f, 1.0f, 0.0f, 0.0f};
+    deviceContext->ClearRenderTargetView(pRTVs[0], black);
+    effect.SetSmokeBlendState(RenderStates::BSAlphaWeightedSub.Get(), nullptr, 0xFFFFFFFF);
+    effect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
+    deviceContext->OMSetRenderTargets(1, pRTVs, nullptr);
     auto inputData = effect.SetRenderSmoke();
+    // auto inputData = effect.SetRenderDefault();
+    deviceContext->IASetPrimitiveTopology(inputData.topology);
+    deviceContext->IASetInputLayout(inputData.pInputLayout);
+    deviceContext->IASetVertexBuffers(0, 1, m_pDrawVB.GetAddressOf(), &inputData.stride, &inputData.offset);
+    effect.Apply(deviceContext);
+    deviceContext->DrawAuto();
+
+    effect.SetBlendState(RenderStates::BSAlphaWeightedAdditive.Get(), nullptr, 0xFFFFFFFF);
+    effect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
+    pRTVs[0] = pSmokeParticleTexture->GetRenderTarget();
+    deviceContext->ClearRenderTargetView(pRTVs[0], black);
+    deviceContext->OMSetRenderTargets(1, pRTVs, nullptr);
+    inputData = effect.SetRenderDefault();
     deviceContext->IASetPrimitiveTopology(inputData.topology);
     deviceContext->IASetInputLayout(inputData.pInputLayout);
     deviceContext->IASetVertexBuffers(0, 1, m_pDrawVB.GetAddressOf(), &inputData.stride, &inputData.offset);
@@ -169,8 +192,14 @@ void ParticleManager::DrawWithSmoke(ID3D11DeviceContext* deviceContext, Particle
     deviceContext->DrawAuto();
 
     // effect.SetBlendState(RenderStates::BSAlphaWeightedAdditive.Get(), nullptr, 0xFFFFFFFF);
-    // effect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
-    inputData = effect.SetRenderDefault();
+    effect.SetBlendState(RenderStates::BSAdditive.Get(), nullptr, 0xFFFFFFFF);
+    effect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
+    effect.SetTextureDefaultParticle(pDefaultParticleTexture->GetShaderResource());
+    effect.SetTextureSmokeParticle(pSmokeParticleTexture->GetShaderResource());
+    pRTVs[0] = pCurrBackBuffer;
+    deviceContext->ClearRenderTargetView(pRTVs[0], green);
+    deviceContext->OMSetRenderTargets(1, pRTVs, nullptr);
+    inputData = effect.SetRenderToBackBuffer();
     deviceContext->IASetPrimitiveTopology(inputData.topology);
     deviceContext->IASetInputLayout(inputData.pInputLayout);
     deviceContext->IASetVertexBuffers(0, 1, m_pDrawVB.GetAddressOf(), &inputData.stride, &inputData.offset);

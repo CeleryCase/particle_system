@@ -30,6 +30,9 @@ Texture2D g_TextureInput : register(t0);
 Texture1D g_TextureRandom : register(t1);
 Texture2D g_TextureAsh : register(t2);
 
+Texture2D g_TextureDefaultParticle : register(t3);
+Texture2D g_TextureSmokeParticle : register(t4);
+
 SamplerState g_SamLinear : register(s0);
 
 

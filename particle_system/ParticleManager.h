@@ -11,6 +11,7 @@
 
 #include "Effects.h"
 #include "Camera.h"
+#include "Texture2D.h"
 
 class ParticleManager
 {
@@ -46,8 +47,13 @@ public:
     void Draw(ID3D11DeviceContext* deviceContext, ParticleEffect& effect);
     void DrawWithSmoke(ID3D11DeviceContext* deviceContext, ParticleEffect& effect);
 
+
     void SetDebugObjectName(const std::string& name);
 
+    std::unique_ptr<Texture2D> pDefaultParticleTexture;                           // 默认粒子渲染结果缓冲区
+    std::unique_ptr<Texture2D> pSmokeParticleTexture;                             // 烟雾粒子渲染结果缓冲区
+
+    ID3D11RenderTargetView *pCurrBackBuffer = nullptr;
 private:
     
     uint32_t m_MaxParticles = 0;
@@ -67,10 +73,13 @@ private:
     ComPtr<ID3D11Buffer> m_pInitVB;
     ComPtr<ID3D11Buffer> m_pDrawVB;
     ComPtr<ID3D11Buffer> m_pStreamOutVB;
+    ComPtr<ID3D11Buffer> m_pFullScreenVB;
 
     ComPtr<ID3D11ShaderResourceView> m_pTextureInputSRV;
     ComPtr<ID3D11ShaderResourceView> m_pTextureRanfomSRV;
     ComPtr<ID3D11ShaderResourceView> m_pTextureAshSRV;
+
+
     
 };
 
