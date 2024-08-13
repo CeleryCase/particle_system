@@ -41,7 +41,7 @@ VertexOut VS(VertexParticle vIn)
     } else if (vIn.type == PT_SMOKE) {
         vOut.posW = 0.5f * t * t * g_AccelW / 5 + t * vIn.initialVelW + vIn.initialPosW;
         // opacity = 1.0f - smoothstep(0.0f, 2.0f, t / 1.0f);
-        opacity = max(0.6f - smoothstep(0.0f, 10.0f, t), 0.0f);
+        opacity = max(0.6f - smoothstep(0.0f, 20.0f, t), 0.0f);
     }
     
     // 颜色随着时间褪去
@@ -87,8 +87,12 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
             halfWidth = 0.5f * gIn[0].sizeW.x - gIn[0].age * 0.2f;
             halfHeight = 0.5f * gIn[0].sizeW.y - gIn[0].age * 0.2f;
         } else {
+            // 圆形
             halfWidth = 0.5f * gIn[0].age / 2 + 1.0f;
             halfHeight = 0.5f * gIn[0].age / 2 + 1.0f;
+            // 火焰形
+            // halfWidth = gIn[0].age + 1.0f;
+            // halfHeight = gIn[0].age + 1.0f;
         }
         
         float4 v[4];
@@ -232,7 +236,7 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
                 p.initialVelW = vRandom;
                 p.accelW = float3(0.0f, 0.0f, 0.0f);
                 p.sizeW = float2(3.0f, 3.0f);
-                p.age = 0.0f;
+                p.age = g_AliveTime * (vRandom.x + 1.0f) * 1;
                 p.type = PT_SMOKE;
                 p.emitCount = 0;
                 output.Append(p);

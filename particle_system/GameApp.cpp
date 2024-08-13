@@ -134,7 +134,7 @@ void GameApp::UpdateScene(float dt)
         ImGui::Text("Fire Particle Count: %d", particleCount.first);
         ImGui::Text("Smoke Particle Count: %d", particleCount.second);
 
-        static int curr_particle_item = 1;
+        static int curr_particle_item = 0;
         static float alive_time = 3.0f;
         static float emit_interval = 0.0015f;
         static DirectX::XMFLOAT3 accel(0.0f, 7.8f, 0.0f);

@@ -78,7 +78,7 @@ private:
     uint32_t m_DefaultParticleCount = 0;
     uint32_t m_SmokeParticleCount = 0;
 
-    DirectX::XMFLOAT4 m_BgColor = {0.0f, 1.0f, 0.0f, 1.0f};
+    DirectX::XMFLOAT4 m_BgColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
     ComPtr<ID3D11Buffer> m_pInitVB;
     ComPtr<ID3D11Buffer> m_pDrawVB;
