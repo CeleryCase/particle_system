@@ -15,6 +15,9 @@ cbuffer CBChangesEveryFrame : register(b0)
     float g_EmitInterval;
     
     float g_AliveTime;
+
+    uint g_DefaultParticleCount;
+    uint g_SmokeParticleCount;
 }
 
 cbuffer CBFixed : register(b1)
@@ -34,6 +37,7 @@ Texture2D g_TextureDefaultParticle : register(t3);
 Texture2D g_TextureSmokeParticle : register(t4);
 
 SamplerState g_SamLinear : register(s0);
+SamplerState g_SamLinearBoard : register(s1);
 
 
 float3 RandUnitVec3(float offset)

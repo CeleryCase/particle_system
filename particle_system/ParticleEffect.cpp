@@ -230,6 +230,9 @@ bool ParticleEffect::InitAllWithSmoke(ID3D11Device* device, std::wstring_view fi
     HR(pImpl->m_pEffectHelper->CreateShaderFromFile((stem.string() + "_VS"), filename,
         device, "VS", "vs_5_0"));
 
+    HR(pImpl->m_pEffectHelper->CreateShaderFromFile((stem.string() + "_BackBuffer_VS"), filename,
+        device, "BackBuffer_VS", "vs_5_0"));
+
     // ******************
     // 创建几何/流输出着色器
     //
@@ -287,9 +290,11 @@ bool ParticleEffect::InitAllWithSmoke(ID3D11Device* device, std::wstring_view fi
     passDesc.namePS = namePS;
     HR(pImpl->m_pEffectHelper->AddEffectPass("RenderSmoke", device, &passDesc));
 
+    nameVS = stem.string() + "_BackBuffer_VS";
     nameGS = stem.string() + "_BackBuffer_GS";
     namePS = stem.string() + "_BackBuffer_PS";
-    passDesc.nameGS = nameGS;
+    passDesc.nameVS = nameVS;
+    passDesc.nameGS = "";
     passDesc.namePS = namePS;
     HR(pImpl->m_pEffectHelper->AddEffectPass("RenderToBackBuffer", device, &passDesc));
 
@@ -302,6 +307,7 @@ bool ParticleEffect::InitAllWithSmoke(ID3D11Device* device, std::wstring_view fi
     // pImpl->m_pEffectHelper->GetEffectPass("StreamOutput")->SetDepthStencilState(RenderStates::DSSNoDepthTest.Get(), 0);
     
     pImpl->m_pEffectHelper->SetSamplerStateByName("g_SamLinear", RenderStates::SSLinearWrap.Get());
+    pImpl->m_pEffectHelper->SetSamplerStateByName("g_SamLinearBoard", RenderStates::SSLinearBoard.Get());
     // pImpl->m_pEffectHelper->SetSamplerStateByName("g_SamShadow", RenderStates::SSShadowPCF.Get());
 
     return true;
@@ -362,7 +368,7 @@ ParticleEffect::InputData ParticleEffect::SetRenderToBackBuffer()
     InputData res{};
     res.stride = sizeof(ParticleEffect::VertexParticle);
     res.pInputLayout = pImpl->m_pVertexParticleLayout.Get();
-    res.topology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+    res.topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     pImpl->m_pCurrEffectPass = pImpl->m_pEffectHelper->GetEffectPass("RenderToBackBuffer");
     return res;
 }
@@ -415,6 +421,12 @@ void ParticleEffect::SetAliveTime(float t)
 void ParticleEffect::SetAcceleration(const DirectX::XMFLOAT3& accel)
 {
     pImpl->m_pEffectHelper->GetConstantBufferVariable("g_AccelW")->SetFloatVector(3, reinterpret_cast<const float*>(&accel)); 
+}
+
+void ParticleEffect::SetParticleCount(uint32_t const defaultParticle, uint32_t smokeParticle)
+{
+    pImpl->m_pEffectHelper->GetConstantBufferVariable("g_DefaultParticleCount")->SetUInt(defaultParticle); 
+    pImpl->m_pEffectHelper->GetConstantBufferVariable("g_SmokeParticleCount")->SetUInt(smokeParticle); 
 }
 
 void ParticleEffect::SetTextureInput(ID3D11ShaderResourceView* textureInput)

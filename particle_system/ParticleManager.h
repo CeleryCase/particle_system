@@ -9,6 +9,7 @@
 #ifndef PARTICLE_MANAGER_H
 #define PARTICLE_MANAGER_H
 
+#include <utility>
 #include "Effects.h"
 #include "Camera.h"
 #include "Texture2D.h"
@@ -36,6 +37,7 @@ public:
     void SetEmitInterval(float t);
     void SetAliveTime(float t);
     void SetAcceleration(const DirectX::XMFLOAT3& accel);
+    void SetParticleCount(uint32_t const defaultParticle, uint32_t const smokeParticle);
 
     void InitResource(ID3D11Device* device, uint32_t maxParticles);
     void SetTextureInput(ID3D11ShaderResourceView* textureInput);
@@ -46,6 +48,8 @@ public:
     void Update(float dt, float gameTime);
     void Draw(ID3D11DeviceContext* deviceContext, ParticleEffect& effect);
     void DrawWithSmoke(ID3D11DeviceContext* deviceContext, ParticleEffect& effect);
+
+    std::pair<uint32_t, uint32_t> GetParticleCount(void);
 
 
     void SetDebugObjectName(const std::string& name);
@@ -70,10 +74,16 @@ private:
     float m_EmitInterval = 0.0f;
     float m_AliveTime = 0.0f;
 
+    uint32_t m_DefaultParticleCount = 0;
+    uint32_t m_SmokeParticleCount = 0;
+
     ComPtr<ID3D11Buffer> m_pInitVB;
     ComPtr<ID3D11Buffer> m_pDrawVB;
     ComPtr<ID3D11Buffer> m_pStreamOutVB;
     ComPtr<ID3D11Buffer> m_pFullScreenVB;
+    ComPtr<ID3D11Buffer> m_pIndexBuffer;
+    ComPtr<ID3D11Buffer> m_pStagingBuffer;
+    ComPtr<ID3D11Query> pQuery;
 
     ComPtr<ID3D11ShaderResourceView> m_pTextureInputSRV;
     ComPtr<ID3D11ShaderResourceView> m_pTextureRanfomSRV;

@@ -219,6 +219,8 @@ public:
 
     void SetAcceleration(const DirectX::XMFLOAT3& accel);
 
+    void SetParticleCount(uint32_t const defaultParticle, uint32_t smokeParticle);
+
     void SetTextureInput(ID3D11ShaderResourceView* textureInput);
     void SetTextureRandom(ID3D11ShaderResourceView* textureRandom);
     void SetTextureAsh(ID3D11ShaderResourceView* textureAsh);

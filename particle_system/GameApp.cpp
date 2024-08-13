@@ -60,13 +60,13 @@ void GameApp::OnResize()
     D3DApp::OnResize();
 
     m_pDepthTexture = std::make_unique<Depth2D>(m_pd3dDevice.Get(), m_ClientWidth, m_ClientHeight);
-    m_pLitTexture = std::make_unique<Texture2D>(m_pd3dDevice.Get(), m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_pLitTexture = std::make_unique<Texture2D>(m_pd3dDevice.Get(), m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
 
     m_pDepthTexture->SetDebugObjectName("DepthTexture");
     m_pLitTexture->SetDebugObjectName("LitTexture");
 
-    m_FireSmoke.pDefaultParticleTexture = std::make_unique<Texture2D>(m_pd3dDevice.Get(), m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
-    m_FireSmoke.pSmokeParticleTexture = std::make_unique<Texture2D>(m_pd3dDevice.Get(), m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_FireSmoke.pDefaultParticleTexture = std::make_unique<Texture2D>(m_pd3dDevice.Get(), m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
+    m_FireSmoke.pSmokeParticleTexture = std::make_unique<Texture2D>(m_pd3dDevice.Get(), m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
     m_FireSmoke.pDefaultParticleTexture->SetDebugObjectName("DefaultParticleTexture");
     m_FireSmoke.pSmokeParticleTexture->SetDebugObjectName("SmokeParticleTexture");
 
@@ -128,6 +128,11 @@ void GameApp::UpdateScene(float dt)
             m_Smoke.Reset();
             m_FireSmoke.Reset();
         }        
+
+        std::pair<uint32_t, uint32_t> particleCount = m_FireSmoke.GetParticleCount();
+
+        ImGui::Text("Fire Particle Count: %d", particleCount.first);
+        ImGui::Text("Smoke Particle Count: %d", particleCount.second);
 
         static int curr_particle_item = 1;
         static ParticleManager *curr_particle = &m_Smoke;
@@ -387,17 +392,6 @@ bool GameApp::InitResource()
     m_TextureManager.CreateFromFile("..\\Texture\\ash0.dds", false, true);
     m_TextureManager.CreateFromFile("..\\Texture\\boom.dds", false, true);
     m_TextureManager.CreateFromFile("..\\Texture\\smoke_01.dds", false, true);
-    // ID3D11Texture2D *resource = nullptr;
-    // D3D11_TEXTURE2D_DESC desc;
-    // m_TextureManager.GetTexture("..\\Texture\\flare_mul.dds")->GetResource((ID3D11Resource **)&resource);
-    // SaveDDSTextureToFile(m_pd3dImmediateContext.Get(), resource,  L"..\\Texture\\flare_mul_mipmap.dds");
-    // resource->GetDesc(&desc);
-    // desc.Width = 64;
-    // desc.Height = 64;
-    // desc.MipLevels = 1;
-    // ID3D11Texture2D *outTex = nullptr;
-    // m_pd3dDevice->CreateTexture2D(&desc, nullptr, &outTex);
-
 
     // 创建随机数据
     std::mt19937 randEngine;
@@ -508,7 +502,7 @@ bool GameApp::InitResource()
     HR(m_pd3dDevice->CreateShaderResourceView(pRandomTex.Get(), nullptr, pRandomTexSRV.ReleaseAndGetAddressOf()));
     m_TextureManager.AddTexture("FireSmokeRandomTex", pRandomTexSRV.Get());
 
-    m_FireSmoke.InitResource(m_pd3dDevice.Get(), 10000);
+    m_FireSmoke.InitResource(m_pd3dDevice.Get(), 1000);
     m_FireSmoke.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\boom.dds"));
     m_FireSmoke.SetTextureRandom(m_TextureManager.GetTexture("FireSmokeRandomTex"));
     m_FireSmoke.SetTextureAsh(m_TextureManager.GetTexture("..\\Texture\\smoke_01.dds"));

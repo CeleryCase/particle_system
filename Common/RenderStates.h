@@ -35,6 +35,7 @@ public:
 
     static ComPtr<ID3D11SamplerState> SSPointClamp;						// 采样器状态：点过滤与Clamp模式
     static ComPtr<ID3D11SamplerState> SSLinearWrap;			            // 采样器状态：线性过滤与Wrap模式
+    static ComPtr<ID3D11SamplerState> SSLinearBoard;			        // 采样器状态：线性过滤与Border模式
     static ComPtr<ID3D11SamplerState> SSLinearClamp;					// 采样器状态：线性过滤与Clamp模式
     static ComPtr<ID3D11SamplerState> SSAnistropicWrap16x;		        // 采样器状态：16倍各向异性过滤与Wrap模式
     static ComPtr<ID3D11SamplerState> SSAnistropicClamp2x;		        // 采样器状态：2倍各向异性过滤与Clamp模式

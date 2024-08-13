@@ -11,6 +11,7 @@ ComPtr<ID3D11RasterizerState> RenderStates::RSShadow		    = nullptr;
 
 ComPtr<ID3D11SamplerState> RenderStates::SSPointClamp			= nullptr;
 ComPtr<ID3D11SamplerState> RenderStates::SSLinearWrap			= nullptr;
+ComPtr<ID3D11SamplerState> RenderStates::SSLinearBoard			= nullptr;
 ComPtr<ID3D11SamplerState> RenderStates::SSLinearClamp          = nullptr;
 ComPtr<ID3D11SamplerState> RenderStates::SSAnistropicWrap16x    = nullptr;
 ComPtr<ID3D11SamplerState> RenderStates::SSAnistropicClamp2x    = nullptr;
@@ -119,6 +120,21 @@ void RenderStates::InitAll(ID3D11Device* device)
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
     HR(device->CreateSamplerState(&sampDesc, SSLinearWrap.GetAddressOf()));
+    
+    // 线性过滤与Board模式
+    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+    sampDesc.MaxAnisotropy = 1;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    sampDesc.BorderColor[0] = 0.0f;
+    sampDesc.BorderColor[1] = 0.0f;
+    sampDesc.BorderColor[2] = 0.0f;
+    sampDesc.BorderColor[3] = 1.0f;
+    HR(device->CreateSamplerState(&sampDesc, SSLinearBoard.GetAddressOf()));
 
     // 16倍各向异性过滤与Wrap模式
     sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
@@ -212,7 +228,7 @@ void RenderStates::InitAll(ID3D11Device* device)
     rtDesc.BlendOp = D3D11_BLEND_OP_SUBTRACT;
     rtDesc.SrcBlendAlpha = D3D11_BLEND_ONE;
     rtDesc.DestBlendAlpha = D3D11_BLEND_ZERO;
-    rtDesc.BlendOpAlpha = D3D11_BLEND_OP_SUBTRACT;
+    rtDesc.BlendOpAlpha = D3D11_BLEND_OP_ADD;
     HR(device->CreateBlendState(&blendDesc, BSAlphaWeightedSub.GetAddressOf()));
 
     // 混合乘法

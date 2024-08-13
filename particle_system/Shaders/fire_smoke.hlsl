@@ -21,6 +21,11 @@ struct GeoOut
     uint type : TYPE;
 };
 
+struct VertexOutSV
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD;
+};
 
 VertexOut VS(VertexParticle vIn)
 {
@@ -32,10 +37,11 @@ VertexOut VS(VertexParticle vIn)
     // 恒定加速度等式
     if (vIn.type == PT_PARTICLE) {
         vOut.posW = 0.5f * t * t * g_AccelW + t * vIn.initialVelW + vIn.initialPosW;
-        opacity = 1.0f - smoothstep(0.0f, 2.0f, t / 1.0f);
+        opacity = 1.0f - smoothstep(0.0f, 1.0f, t / 1.0f);
     } else if (vIn.type == PT_SMOKE) {
         vOut.posW = 0.5f * t * t * g_AccelW / 5 + t * vIn.initialVelW + vIn.initialPosW;
-        opacity = 1.0f - smoothstep(0.0f, 10.0f, t / 1.0f);
+        // opacity = 1.0f - smoothstep(0.0f, 2.0f, t / 1.0f);
+        opacity = max(0.6f - smoothstep(0.0f, 10.0f, t), 0.0f);
     }
     
     // 颜色随着时间褪去
@@ -44,6 +50,17 @@ VertexOut VS(VertexParticle vIn)
     vOut.sizeW = vIn.sizeW;
     vOut.type = vIn.type;
     vOut.age = vIn.age;
+    
+    return vOut;
+}
+
+VertexOutSV BackBuffer_VS(VertexParticle vIn)
+{
+    VertexOutSV vOut;
+    
+    vOut.position = float4(vIn.initialPosW, 1.0f);
+    // vOut.position = mul(vOut.position, g_ViewProj);
+    vOut.tex = vIn.sizeW;
     
     return vOut;
 }
@@ -64,10 +81,15 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
         //
         // 计算出处于世界空间的四边形
         //
-        // float halfWidth = 0.5f * gIn[0].sizeW.x;
-        // float halfHeight = 0.5f * gIn[0].sizeW.y;
-        float halfWidth = 0.5f * gIn[0].sizeW.x - gIn[0].age * 0.2f;
-        float halfHeight = 0.5f * gIn[0].sizeW.y - gIn[0].age * 0.2f;
+        float halfWidth;
+        float halfHeight;
+        if (gIn[0].type == PT_PARTICLE) {
+            halfWidth = 0.5f * gIn[0].sizeW.x - gIn[0].age * 0.2f;
+            halfHeight = 0.5f * gIn[0].sizeW.y - gIn[0].age * 0.2f;
+        } else {
+            halfWidth = 0.5f * gIn[0].age / 2 + 1.0f;
+            halfHeight = 0.5f * gIn[0].age / 2 + 1.0f;
+        }
         
         float4 v[4];
         v[0] = float4(gIn[0].posW + halfWidth * right - halfHeight * up, 1.0f);
@@ -107,52 +129,19 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
 }
 
 [maxvertexcount(4)]
-void BackBuffer_GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
+void BackBuffer_GS(triangle VertexOut gIn[3], inout PointStream<GeoOut> output)
 {
-    // 不要绘制用于产生粒子的顶点
-    if (gIn[0].type != PT_EMITTER)
-    {
-        //
-        // 计算该粒子的世界矩阵让公告板朝向摄像机
-        //
-        float3 look = normalize(g_EyePosW.xyz - gIn[0].posW);
-        float3 right = normalize(cross(float3(0.0f, 1.0f, 0.0f), look));
-        float3 up = cross(look, right);
-        
-        //
-        // 计算出处于世界空间的四边形
-        //
-        // float halfWidth = 0.5f * gIn[0].sizeW.x;
-        // float halfHeight = 0.5f * gIn[0].sizeW.y;
-        float halfWidth = 0.5f * gIn[0].sizeW.x - gIn[0].age * 0.2f;
-        float halfHeight = 0.5f * gIn[0].sizeW.y - gIn[0].age * 0.2f;
-        
-        float4 v[4];
-        // v[0] = float4(gIn[0].posW + halfWidth * right - halfHeight * up, 1.0f);
-        // v[1] = float4(gIn[0].posW + halfWidth * right + halfHeight * up, 1.0f);
-        // v[2] = float4(gIn[0].posW - halfWidth * right - halfHeight * up, 1.0f);
-        // v[3] = float4(gIn[0].posW - halfWidth * right + halfHeight * up, 1.0f);
-
-        v[2] = float4(gIn[0].posW + halfWidth * right - halfHeight * up, 1.0f);
-        v[0] = float4(gIn[0].posW + halfWidth * right + halfHeight * up, 1.0f);
-        v[3] = float4(gIn[0].posW - halfWidth * right - halfHeight * up, 1.0f);
-        v[1] = float4(gIn[0].posW - halfWidth * right + halfHeight * up, 1.0f);
-    
-        //
-        // 将四边形顶点从世界空间变换到齐次裁减空间
-        //
         GeoOut gOut;
         [unroll]
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 3; ++i)
         {
-            gOut.posH = mul(v[i], g_ViewProj);
-            gOut.tex = gOut.posH.xy / gOut.posH.w * 0.5 + 0.5;
+            gOut.posH = float4(gIn[i].posW, 1.0f);
+            gOut.tex = gIn[i].sizeW;
 
-            gOut.color = gIn[0].color;
-            gOut.type = gIn[0].type;
+            gOut.color = gIn[i].color;
+            gOut.type = gIn[i].type;
             output.Append(gOut);
         }
-    }
 }
 
 float4 PS(GeoOut pIn) : SV_Target
@@ -160,7 +149,7 @@ float4 PS(GeoOut pIn) : SV_Target
     if (pIn.type != PT_PARTICLE) {
         discard;
     }
-    return g_TextureInput.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    return g_TextureInput.Sample(g_SamLinearBoard, pIn.tex) * pIn.color;
 }
 
 float4 Smoke_PS(GeoOut pIn) : SV_Target
@@ -169,25 +158,25 @@ float4 Smoke_PS(GeoOut pIn) : SV_Target
         discard;
     }
     // return g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
-    float4 dst_color = g_TextureAsh.Sample(g_SamLinear, pIn.tex) * pIn.color;
+    float4 dst_color = g_TextureAsh.Sample(g_SamLinearBoard, pIn.tex) * pIn.color;
     if (dst_color.r <= 0.05f || dst_color.g <= 0.05f || dst_color.b <= 0.05f) {
         discard;
     } 
     return dst_color;
 }
 
-float4 BackBuffer_PS(GeoOut pIn) : SV_Target
+float4 BackBuffer_PS(VertexOutSV pIn) : SV_Target
 {
-    // float2 ndcPos = pIn.posH.xy / pIn.posH.w;
-
-    // float2 viewportPos = (ndcPos * 0.5 + 0.5) * float2(1280, 720);
-
-
     float4 defaultParticleColor = g_TextureDefaultParticle.Sample(g_SamLinear, pIn.tex);
     float4 smokeParticleColor = g_TextureSmokeParticle.Sample(g_SamLinear, pIn.tex);
 
-    // return defaultParticleColor * defaultParticleColor.a + smokeParticleColor * smokeParticleColor.a;
-    return smokeParticleColor;
+    if (defaultParticleColor.r >= 0.1f && defaultParticleColor.g >= 0.1f && defaultParticleColor.b >= 0.1f) {
+        return defaultParticleColor;
+    } else {
+        return defaultParticleColor + smokeParticleColor * smokeParticleColor.a;
+    }
+    // return defaultParticleColor + smokeParticleColor * smokeParticleColor.a;
+    // return defaultParticleColor;
 }
 
 VertexParticle SO_VS(VertexParticle vIn)
@@ -196,7 +185,7 @@ VertexParticle SO_VS(VertexParticle vIn)
 }
 
 [maxvertexcount(2)]
-void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output)
+void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output, uint primitiveID : SV_PrimitiveID)
 {
     gIn[0].age += g_TimeStep;
     
@@ -231,7 +220,7 @@ void SO_GS(point VertexParticle gIn[1], inout PointStream<VertexParticle> output
     {
         // 用于限制粒子数目产生的特定条件，对于不同的粒子系统限制也有所变化
         if (gIn[0].age <= g_AliveTime) {
-            if (gIn[0].age >= 0.8 * g_AliveTime && gIn[0].emitCount == 0) {
+            if (gIn[0].age >= 0.8 * g_AliveTime && gIn[0].emitCount == 0 && primitiveID % 30 == 0 && g_SmokeParticleCount <= 100) {
                 gIn[0].emitCount = 1;
                 float t = gIn[0].age;
                 float3 vRandom = RandUnitVec3(0.0f);
