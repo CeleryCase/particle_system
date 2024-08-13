@@ -63,6 +63,8 @@ private:
     ParticleEffect m_SmokeEffect;                                       // 烟雾特效
     ParticleEffect m_FireSmokeEffect;                                   // 火焰烟雾特效
     ParticleType m_CurrParticleType = ParticleType::Smoke;                                    // 当前显示粒子
+    ParticleManager *m_CurrParticle = &m_Smoke;
+    ParticleEffect *m_CurrEffect = &m_SmokeEffect;
 
     std::unique_ptr<Texture2D> m_pLitTexture;                           // 中间场景缓冲区
 

@@ -51,6 +51,7 @@ public:
 
     std::pair<uint32_t, uint32_t> GetParticleCount(void);
 
+    void SetBgColor(DirectX::XMFLOAT4 color);
 
     void SetDebugObjectName(const std::string& name);
 
@@ -77,6 +78,8 @@ private:
     uint32_t m_DefaultParticleCount = 0;
     uint32_t m_SmokeParticleCount = 0;
 
+    DirectX::XMFLOAT4 m_BgColor = {0.0f, 1.0f, 0.0f, 1.0f};
+
     ComPtr<ID3D11Buffer> m_pInitVB;
     ComPtr<ID3D11Buffer> m_pDrawVB;
     ComPtr<ID3D11Buffer> m_pStreamOutVB;
@@ -89,8 +92,6 @@ private:
     ComPtr<ID3D11ShaderResourceView> m_pTextureRanfomSRV;
     ComPtr<ID3D11ShaderResourceView> m_pTextureAshSRV;
 
-
-    
 };
 
 #endif

@@ -135,7 +135,6 @@ void GameApp::UpdateScene(float dt)
         ImGui::Text("Smoke Particle Count: %d", particleCount.second);
 
         static int curr_particle_item = 1;
-        static ParticleManager *curr_particle = &m_Smoke;
         static float alive_time = 3.0f;
         static float emit_interval = 0.0015f;
         static DirectX::XMFLOAT3 accel(0.0f, 7.8f, 0.0f);
@@ -150,34 +149,40 @@ void GameApp::UpdateScene(float dt)
         {
             m_CurrParticleType = static_cast<ParticleType>(curr_particle_item);
             switch (m_CurrParticleType) {
-                case ParticleType::Fire: curr_particle = &m_Fire; break;
-                case ParticleType::Boom: curr_particle = &m_Boom; break;
-                case ParticleType::Fountain: curr_particle = &m_Fountain; break;
-                case ParticleType::Smoke: curr_particle = &m_Smoke; break;
-                case ParticleType::FireSmoke: curr_particle = &m_FireSmoke; break;
-                default: curr_particle = &m_Fountain; break;
+                case ParticleType::Fire: m_CurrParticle = &m_Fire; m_CurrEffect = &m_FireEffect; break;
+                case ParticleType::Boom: m_CurrParticle = &m_Boom; m_CurrEffect = &m_BoomEffect; break;
+                case ParticleType::Fountain: m_CurrParticle = &m_Fountain; m_CurrEffect = &m_FountainEffect; break;
+                case ParticleType::Smoke: m_CurrParticle = &m_Smoke; m_CurrEffect = &m_SmokeEffect; break;
+                case ParticleType::FireSmoke: m_CurrParticle = &m_FireSmoke; m_CurrEffect = &m_FireSmokeEffect; break;
+                default: m_CurrParticle = &m_Fountain; m_CurrEffect = &m_FireEffect; break;
             }
         }                                                                            
         if (ImGui::SliderFloat("Emit Interval", &emit_interval, 0.0f, 1.0f, "%.4f"))
         {
-            curr_particle->SetEmitInterval(emit_interval);
+            m_CurrParticle->SetEmitInterval(emit_interval);
         }
 
         if (ImGui::SliderFloat("Alive Time", &alive_time, 0.0f, 10.0f, "%.1f"))
         {
-            curr_particle->SetAliveTime(alive_time);
+            m_CurrParticle->SetAliveTime(alive_time);
         }
         if (ImGui::SliderFloat("Acceleration: x", &accel.x, -20.0f, 20.0f, "%.1f"))
         {
-            curr_particle->SetAcceleration(accel);
+            m_CurrParticle->SetAcceleration(accel);
         }
         if (ImGui::SliderFloat("Acceleration: y", &accel.y, -20.0f, 20.0f, "%.1f"))
         {
-            curr_particle->SetAcceleration(accel);
+            m_CurrParticle->SetAcceleration(accel);
         }
         if (ImGui::SliderFloat("Acceleration: z", &accel.z, -20.0f, 20.0f, "%.1f"))
         {
-            curr_particle->SetAcceleration(accel);
+            m_CurrParticle->SetAcceleration(accel);
+        }
+        
+        static DirectX::XMFLOAT4 color;
+        if (ImGui::ColorEdit4("BgColor", reinterpret_cast<float*>(&color))) 
+        {
+            m_CurrParticle->SetBgColor(color);
         }
     }
     ImGui::End();
@@ -269,15 +274,15 @@ void GameApp::DrawScene()
     // 绘制天空盒
     //
     pRTVs[0] = GetBackBufferRTV();
-    m_pd3dImmediateContext->RSSetViewports(1, &vp);
-    m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, nullptr);
-    m_SkyboxEffect.SetRenderDefault();
-    m_SkyboxEffect.SetDepthTexture(m_pDepthTexture->GetShaderResource());
-    m_SkyboxEffect.SetLitTexture(m_pLitTexture->GetShaderResource());
-    m_Skybox.Draw(m_pd3dImmediateContext.Get(), m_SkyboxEffect);
-    m_SkyboxEffect.SetDepthTexture(nullptr);
-    m_SkyboxEffect.SetLitTexture(nullptr);
-    m_SkyboxEffect.Apply(m_pd3dImmediateContext.Get());
+    // m_pd3dImmediateContext->RSSetViewports(1, &vp);
+    // m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, nullptr);
+    // m_SkyboxEffect.SetRenderDefault();
+    // m_SkyboxEffect.SetDepthTexture(m_pDepthTexture->GetShaderResource());
+    // m_SkyboxEffect.SetLitTexture(m_pLitTexture->GetShaderResource());
+    // m_Skybox.Draw(m_pd3dImmediateContext.Get(), m_SkyboxEffect);
+    // m_SkyboxEffect.SetDepthTexture(nullptr);
+    // m_SkyboxEffect.SetLitTexture(nullptr);
+    // m_SkyboxEffect.Apply(m_pd3dImmediateContext.Get());
 
     // ******************
     // 粒子系统留在最后绘制便于混合
@@ -291,16 +296,22 @@ void GameApp::DrawScene()
     // m_Boom.Draw(m_pd3dImmediateContext.Get(), m_BoomEffect);
     // m_Fountain.Draw(m_pd3dImmediateContext.Get(), m_FountainEffect);
 
-    m_FireSmoke.pCurrBackBuffer = GetBackBufferRTV();
+    m_CurrParticle->pCurrBackBuffer = GetBackBufferRTV();
 
-    switch (m_CurrParticleType) {
-        case ParticleType::Fire: m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect); break;
-        case ParticleType::Boom: m_Boom.Draw(m_pd3dImmediateContext.Get(), m_BoomEffect); break;
-        case ParticleType::Fountain: m_Fountain.Draw(m_pd3dImmediateContext.Get(), m_FountainEffect); break;
-        case ParticleType::Smoke: m_Smoke.Draw(m_pd3dImmediateContext.Get(), m_SmokeEffect); break;
-        case ParticleType::FireSmoke: m_FireSmoke.DrawWithSmoke(m_pd3dImmediateContext.Get(), m_FireSmokeEffect); break;
-        default: m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect); break;
+    if (m_CurrParticleType == ParticleType::FireSmoke) {
+        m_CurrParticle->DrawWithSmoke(m_pd3dImmediateContext.Get(), *m_CurrEffect);
+    } else {
+        m_CurrParticle->Draw(m_pd3dImmediateContext.Get(), *m_CurrEffect);
     }
+
+    // switch (m_CurrParticleType) {
+    //     case ParticleType::Fire: m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect); break;
+    //     case ParticleType::Boom: m_Boom.Draw(m_pd3dImmediateContext.Get(), m_BoomEffect); break;
+    //     case ParticleType::Fountain: m_Fountain.Draw(m_pd3dImmediateContext.Get(), m_FountainEffect); break;
+    //     case ParticleType::Smoke: m_Smoke.Draw(m_pd3dImmediateContext.Get(), m_SmokeEffect); break;
+    //     case ParticleType::FireSmoke: m_FireSmoke.DrawWithSmoke(m_pd3dImmediateContext.Get(), m_FireSmokeEffect); break;
+    //     default: m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect); break;
+    // }
     // m_Fire.Draw(m_pd3dImmediateContext.Get(), m_FireEffect);
 
 
