@@ -257,11 +257,6 @@ void ParticleManager::DrawWithSmoke(ID3D11DeviceContext* deviceContext, Particle
     // 使用流输出顶点绘制粒子
     //
 
-    float black[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-    float green[4] = {0.0f, 1.0f, 0.0f, 0.0f};
-
-    deviceContext->Begin(pQuery.Get());
-    // deviceContext->ClearRenderTargetView(pRTVs[0], black);
     deviceContext->ClearRenderTargetView(pRTVs[0], reinterpret_cast<float*>(&m_BgColor));
     effect.SetSmokeBlendState(RenderStates::BSAlphaWeightedSub.Get(), nullptr, 0xFFFFFFFF);
     effect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
@@ -273,19 +268,9 @@ void ParticleManager::DrawWithSmoke(ID3D11DeviceContext* deviceContext, Particle
     effect.Apply(deviceContext);
     deviceContext->DrawAuto();
 
-    deviceContext->End(pQuery.Get());
-    while (deviceContext->GetData(pQuery.Get(), &soStats, sizeof(soStats), 0) != S_OK) {
-        ;
-    }
-    numPrimitiveWritten = soStats.NumPrimitivesWritten;
 
-
-    deviceContext->Begin(pQuery.Get());
-
-    effect.SetBlendState(RenderStates::BSAlphaWeightedAdditive.Get(), nullptr, 0xFFFFFFFF);
     effect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
     pRTVs[0] = pDefaultParticleTexture->GetRenderTarget();
-    // deviceContext->ClearRenderTargetView(pRTVs[0], black);
     deviceContext->ClearRenderTargetView(pRTVs[0], reinterpret_cast<float*>(&m_BgColor));
     deviceContext->OMSetRenderTargets(1, pRTVs, nullptr);
     inputData = effect.SetRenderDefault();
@@ -295,20 +280,12 @@ void ParticleManager::DrawWithSmoke(ID3D11DeviceContext* deviceContext, Particle
     effect.Apply(deviceContext);
     deviceContext->DrawAuto();
 
-    deviceContext->End(pQuery.Get());
-    while (deviceContext->GetData(pQuery.Get(), &soStats, sizeof(soStats), 0) != S_OK) {
-        ;
-    }
-
-    numPrimitiveWritten = soStats.NumPrimitivesWritten;
-
     // effect.SetBlendState(RenderStates::BSAlphaWeightedAdditive.Get(), nullptr, 0xFFFFFFFF);
     effect.SetBlendState(RenderStates::BSAdditive.Get(), nullptr, 0xFFFFFFFF);
     effect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
     effect.SetTextureDefaultParticle(pDefaultParticleTexture->GetShaderResource());
     effect.SetTextureSmokeParticle(pSmokeParticleTexture->GetShaderResource());
     pRTVs[0] = pCurrBackBuffer;
-    // deviceContext->ClearRenderTargetView(pRTVs[0], black);
     deviceContext->ClearRenderTargetView(pRTVs[0], reinterpret_cast<float*>(&m_BgColor));
     deviceContext->OMSetRenderTargets(1, pRTVs, nullptr);
     inputData = effect.SetRenderToBackBuffer();
