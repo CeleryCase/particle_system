@@ -36,25 +36,28 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 #
 # Assimp
 #
-set(ASSIMP_BUILD_ZLIB ON)
+set(USE_ASSIMP ON)
+set(ASSIMP_BUILD_ZLIB OFF)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
 set(ASSIMP_BUILD_TESTS OFF)
 set(ASSIMP_INSTALL OFF)
 set(ASSIMP_INJECT_DEBUG_POSTFIX OFF)
 
-if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Assimp/CMakeLists.txt")
-    add_subdirectory("assimp")
-else()
-    FetchContent_Declare(
-        assimp
-        GIT_REPOSITORY https://github.com/assimp/assimp.git
-        GIT_TAG v5.2.4
-    )
-    FetchContent_MakeAvailable(assimp)
+if (${USE_ASSIMP})
+    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Assimp/CMakeLists.txt")
+        add_subdirectory("assimp")
+    else()
+        FetchContent_Declare(
+            assimp
+            GIT_REPOSITORY https://github.com/assimp/assimp.git
+            GIT_TAG v5.2.4
+        )
+        FetchContent_MakeAvailable(assimp)
+    endif()
+    set_target_properties(assimp PROPERTIES FOLDER "Assimp")
+    set_target_properties(UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTIES FOLDER "Assimp")
+    set_target_properties(zlibstatic PROPERTIES FOLDER "Assimp")
 endif()
-set_target_properties(assimp PROPERTIES FOLDER "Assimp")
-set_target_properties(UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTIES FOLDER "Assimp")
-set_target_properties(zlibstatic PROPERTIES FOLDER "Assimp")
 
 #
 # ImGui(modified)

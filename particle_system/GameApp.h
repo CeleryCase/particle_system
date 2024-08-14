@@ -28,7 +28,6 @@ public:
 
 private:
     bool InitResource();
-    void CreateRandomTrees();
 
 private:
 
@@ -41,22 +40,16 @@ private:
     };
 
     TextureManager m_TextureManager;
-    ModelManager m_ModelManager;
 
     std::unique_ptr<Depth2D> m_pDepthTexture;                           // 深度缓冲区
 
-    GameObject m_Trees;										            // 树
-    GameObject m_Ground;										        // 地面                 
     std::unique_ptr<Buffer> m_pInstancedBuffer;                         // 树的实例缓冲区
-    GameObject m_Skybox;                                                // 天空盒
     ParticleManager m_Fire;                                             // 火焰粒子系统
     ParticleManager m_Boom;                                             // 爆炸粒子系统
     ParticleManager m_Fountain;                                         // 喷泉粒子系统
     ParticleManager m_Smoke;                                            // 烟雾粒子系统
     ParticleManager m_FireSmoke;                                        // 火焰烟雾粒子系统
 
-    BasicEffect m_BasicEffect;								            // 对象渲染特效管理
-    SkyboxEffect m_SkyboxEffect;                                        // 天空盒特效
     ParticleEffect m_FireEffect;                                        // 火焰特效
     ParticleEffect m_BoomEffect;                                        // 爆炸特效
     ParticleEffect m_FountainEffect;                                    // 喷泉特效
@@ -65,8 +58,6 @@ private:
     ParticleType m_CurrParticleType = ParticleType::Fire;                                    // 当前显示粒子
     ParticleManager *m_CurrParticle = &m_Fire;
     ParticleEffect *m_CurrEffect = &m_FireEffect;
-
-    std::unique_ptr<Texture2D> m_pLitTexture;                           // 中间场景缓冲区
 
     std::shared_ptr<FirstPersonCamera> m_pCamera;				        // 摄像机
     FirstPersonCameraController m_CameraController;                     // 摄像机控制器
