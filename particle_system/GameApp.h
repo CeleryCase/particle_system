@@ -9,7 +9,6 @@
 #include <RenderStates.h>
 #include <Texture2D.h>
 #include <Buffer.h>
-#include <Collision.h>
 #include <TextureManager.h>
 #include "ParticleManager.h"
 
@@ -41,7 +40,6 @@ private:
 
     std::unique_ptr<Depth2D> m_pDepthTexture;                           // 深度缓冲区
 
-    std::unique_ptr<Buffer> m_pInstancedBuffer;                         // 树的实例缓冲区
     ParticleManager m_Fire;                                             // 火焰粒子系统
     ParticleManager m_Boom;                                             // 爆炸粒子系统
     ParticleManager m_Fountain;                                         // 喷泉粒子系统
@@ -53,6 +51,7 @@ private:
     ParticleEffect m_FountainEffect;                                    // 喷泉特效
     ParticleEffect m_SmokeEffect;                                       // 烟雾特效
     ParticleEffect m_FireSmokeEffect;                                   // 火焰烟雾特效
+
     ParticleType m_CurrParticleType = ParticleType::Fire;                                    // 当前显示粒子
     ParticleManager *m_CurrParticle = &m_Fire;
     ParticleEffect *m_CurrEffect = &m_FireEffect;

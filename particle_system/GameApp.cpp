@@ -151,7 +151,7 @@ void GameApp::UpdateScene(float dt)
             m_CurrParticle->SetEmitInterval(emit_interval);
         }
 
-        if (ImGui::SliderFloat("Alive Time", &alive_time, 0.0f, 10.0f, "%.1f"))
+        if (ImGui::SliderFloat("Alive Time", &alive_time, 0.0f, 5.0f, "%.1f"))
         {
             m_CurrParticle->SetAliveTime(alive_time);
         }
@@ -222,25 +222,13 @@ void GameApp::DrawScene()
     // ******************
     // 正常绘制场景
     //
-    
-    float black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    float white[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    float green[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
-    m_pd3dImmediateContext->ClearDepthStencilView(m_pDepthTexture->GetDepthStencil(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     ID3D11RenderTargetView* pRTVs[]{GetBackBufferRTV()};
-
-    m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, m_pDepthTexture->GetDepthStencil());
     D3D11_VIEWPORT vp = m_pCamera->GetViewPort();
     m_pd3dImmediateContext->RSSetViewports(1, &vp);
-
 
     // ******************
     // 粒子系统留在最后绘制便于混合
     //
-    // 只显示粒子效果
-    m_pd3dImmediateContext->ClearRenderTargetView(GetBackBufferRTV(), green);
-
-    m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, m_pDepthTexture->GetDepthStencil());
 
     m_CurrParticle->pCurrBackBuffer = GetBackBufferRTV();
 

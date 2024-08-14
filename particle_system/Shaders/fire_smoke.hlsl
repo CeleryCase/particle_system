@@ -37,12 +37,10 @@ VertexOut VS(VertexParticle vIn)
     // 恒定加速度等式
     if (vIn.type == PT_PARTICLE) {
         vOut.posW = 0.5f * t * t * g_AccelW + t * vIn.initialVelW + vIn.initialPosW;
-        // opacity = 1.0f - smoothstep(0.0f, 1.0f, t / 1.0f);
-        opacity = max(1.0f - smoothstep(0.0f, 1.0f, t), 0.1f);
+        opacity = 1.0f - smoothstep(0.0f, 1.0f, t);
     } else if (vIn.type == PT_SMOKE) {
         vOut.posW = 0.5f * t * t * g_AccelW / 5 + t * vIn.initialVelW + vIn.initialPosW;
-        // opacity = 1.0f - smoothstep(0.0f, 2.0f, t / 1.0f);
-        opacity = max(0.6f - smoothstep(0.0f, 20.0f, t), 0.1f);
+        opacity = 0.6f - smoothstep(0.0f, 20.0f, t);
     }
     
     // 颜色随着时间褪去
@@ -60,7 +58,6 @@ VertexOutSV BackBuffer_VS(VertexParticle vIn)
     VertexOutSV vOut;
     
     vOut.position = float4(vIn.initialPosW, 1.0f);
-    // vOut.position = mul(vOut.position, g_ViewProj);
     vOut.tex = vIn.sizeW;
     
     return vOut;
@@ -91,7 +88,7 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
             // 圆形
             halfWidth = 0.5f * gIn[0].age / 2 + 1.0f;
             halfHeight = 0.5f * gIn[0].age / 2 + 1.0f;
-            // 火焰形
+            // 小火花形
             // halfWidth = gIn[0].age + 1.0f;
             // halfHeight = gIn[0].age + 1.0f;
         }
@@ -114,7 +111,6 @@ void GS(point VertexOut gIn[1], inout TriangleStream<GeoOut> output)
         for (int i = 0; i < 4; ++i)
         {
             gOut.posH = mul(v[i], g_ViewProj);
-            // gOut.tex = float2((float) (i % 2), 1.0f - (i / 2));
             gOut.tex = g_TexCoord[i];
 
             gOut.tex -= float2(0.5f, 0.5f);
@@ -180,8 +176,6 @@ float4 BackBuffer_PS(VertexOutSV pIn) : SV_Target
     } else {
         return defaultParticleColor + smokeParticleColor * smokeParticleColor.a;
     }
-    // return defaultParticleColor + smokeParticleColor * smokeParticleColor.a;
-    // return defaultParticleColor;
 }
 
 VertexParticle SO_VS(VertexParticle vIn)
