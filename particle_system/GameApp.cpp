@@ -157,7 +157,7 @@ void GameApp::UpdateScene(float dt)
                 default: m_CurrParticle = &m_Fountain; m_CurrEffect = &m_FireEffect; break;
             }
         }                                                                            
-        if (ImGui::SliderFloat("Emit Interval", &emit_interval, 0.0f, 1.0f, "%.4f"))
+        if (ImGui::SliderFloat("Emit Interval", &emit_interval, 0.0f, 0.5f, "%.4f"))
         {
             m_CurrParticle->SetEmitInterval(emit_interval);
         }
