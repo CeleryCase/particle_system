@@ -13,7 +13,6 @@
 #include <LightHelper.h>
 #include <RenderStates.h>
 
-#include <GameObject.h>
 
 #include <Buffer.h>
 #include <IEffect.h>

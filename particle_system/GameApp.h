@@ -7,11 +7,9 @@
 #include "Effects.h"
 #include <CameraController.h>
 #include <RenderStates.h>
-#include <GameObject.h>
 #include <Texture2D.h>
 #include <Buffer.h>
 #include <Collision.h>
-#include <ModelManager.h>
 #include <TextureManager.h>
 #include "ParticleManager.h"
 

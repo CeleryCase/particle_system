@@ -393,7 +393,7 @@ bool GameApp::InitResource()
     m_Boom.SetDebugObjectName("Boom");
 
 
-    m_Fountain.InitResource(m_pd3dDevice.Get(), 10000);
+    m_Fountain.InitResource(m_pd3dDevice.Get(), 1000);
     m_Fountain.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\raindrop0.dds"));
     m_Fountain.SetTextureRandom(m_TextureManager.GetTexture("FountainRandomTex"));
     m_Fountain.SetEmitPos(XMFLOAT3(0.0f, 0.0f, 0.0f));
@@ -408,13 +408,13 @@ bool GameApp::InitResource()
     HR(m_pd3dDevice->CreateShaderResourceView(pRandomTex.Get(), nullptr, pRandomTexSRV.ReleaseAndGetAddressOf()));
     m_TextureManager.AddTexture("SmokeRandomTex", pRandomTexSRV.Get());
 
-    m_Smoke.InitResource(m_pd3dDevice.Get(), 10000);
+    m_Smoke.InitResource(m_pd3dDevice.Get(), 1000);
     m_Smoke.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\smoke_01.dds"));
     m_Smoke.SetTextureRandom(m_TextureManager.GetTexture("FountainRandomTex"));
     m_Smoke.SetEmitPos(XMFLOAT3(0.0f, -1.0f, 0.0f));
     m_Smoke.SetEmitDir(XMFLOAT3(0.0f, 1.0f, 0.0f));
     m_Smoke.SetAcceleration(XMFLOAT3(1.0f, 1.0f, 1.0f));
-    m_Smoke.SetEmitInterval(0.3f);
+    m_Smoke.SetEmitInterval(0.01f);
     m_Smoke.SetAliveTime(5.0f);
     m_Smoke.SetDebugObjectName("Smoke");
 

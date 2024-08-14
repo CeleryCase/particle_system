@@ -12,7 +12,9 @@ add_library(Common STATIC ${COMMON_SRCS} ${COMMON_HEADERS})
 target_link_libraries(Common ImGui)
 
 # Assimp
-target_link_libraries(Common assimp)
+if (${USE_ASSIMP})
+    target_link_libraries(Common assimp)
+endif()
 
 target_include_directories(Common PUBLIC .)
 

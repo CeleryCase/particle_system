@@ -23,8 +23,10 @@ add_executable(particle_system WIN32 ${DIR_SRCS} ${HEADER_FILES} ${SHADER_FILES}
 target_link_libraries(particle_system d3d11.lib dxgi.lib dxguid.lib D3DCompiler.lib winmm.lib)
 
 # Assimp
-target_link_libraries(particle_system assimp)
-set_target_properties(particle_system PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=${ASSIMP_LIBRARY_OUTPUT_DIRECTORY}/$<IF:$<CONFIG:Debug>,Debug,Release>")
+if (${USE_ASSIMP})
+    target_link_libraries(particle_system assimp)
+    set_target_properties(particle_system PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=${ASSIMP_LIBRARY_OUTPUT_DIRECTORY}/$<IF:$<CONFIG:Debug>,Debug,Release>")
+endif()
 
 # ImGui
 target_link_libraries(particle_system ImGui)
