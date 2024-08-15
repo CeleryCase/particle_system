@@ -282,10 +282,13 @@ bool GameApp::InitResource()
 
     m_FireSmokeEffect.SetBlendState(RenderStates::BSAlphaWeightedAdditive.Get(), nullptr, 0xFFFFFFFF);
     m_FireSmokeEffect.SetDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
-    m_FireSmokeEffect.SetSmokeBlendState(RenderStates::BSInvMul.Get(), nullptr, 0xFFFFFFFF);
+    m_FireSmokeEffect.SetSmokeBlendState(RenderStates::BSAlphaWeightedSub.Get(), nullptr, 0xFFFFFFFF);
     m_FireSmokeEffect.SetSmokeDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
+    m_FireSmokeEffect.SetBackBufferBlendState(RenderStates::BSAdditive.Get(), nullptr, 0xFFFFFFFF);
+    m_FireSmokeEffect.SetBackBufferDepthStencilState(RenderStates::DSSNoDepthWrite.Get(), 0);
     m_FireSmokeEffect.SetViewMatrix(camera->GetViewMatrixXM());
     m_FireSmokeEffect.SetProjMatrix(camera->GetProjMatrixXM());
+
 
     // ******************
     // 初始化游戏对象
@@ -381,7 +384,7 @@ bool GameApp::InitResource()
     m_Boom.SetDebugObjectName("Boom");
 
 
-    m_Fountain.InitResource(m_pd3dDevice.Get(), 1000);
+    m_Fountain.InitResource(m_pd3dDevice.Get(), 10000);
     m_Fountain.SetTextureInput(m_TextureManager.GetTexture("..\\Texture\\raindrop0.dds"));
     m_Fountain.SetTextureRandom(m_TextureManager.GetTexture("FountainRandomTex"));
     m_Fountain.SetEmitPos(XMFLOAT3(0.0f, 0.0f, 0.0f));

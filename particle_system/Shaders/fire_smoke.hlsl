@@ -37,10 +37,12 @@ VertexOut VS(VertexParticle vIn)
     // 恒定加速度等式
     if (vIn.type == PT_PARTICLE) {
         vOut.posW = 0.5f * t * t * g_AccelW + t * vIn.initialVelW + vIn.initialPosW;
-        opacity = 1.0f - smoothstep(0.0f, 1.0f, t);
+        // opacity = 1.0f - smoothstep(0.0f, 1.0f, t);
+        opacity = max(1.0f - smoothstep(0.0f, 1.0f, t), 0.1f);
     } else if (vIn.type == PT_SMOKE) {
         vOut.posW = 0.5f * t * t * g_AccelW / 5 + t * vIn.initialVelW + vIn.initialPosW;
-        opacity = 0.6f - smoothstep(0.0f, 20.0f, t);
+        // opacity = 0.6f - smoothstep(0.0f, 20.0f, t);
+        opacity = max(0.6f - smoothstep(0.0f, 20.0f, t), 0.1f);
     }
     
     // 颜色随着时间褪去

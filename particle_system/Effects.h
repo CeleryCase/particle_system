@@ -95,6 +95,9 @@ public:
     void SetSmokeBlendState(ID3D11BlendState* blendState, const float blendFactor[4], uint32_t sampleMask);
     void SetSmokeDepthStencilState(ID3D11DepthStencilState* depthStencilState, UINT stencilRef);
 
+    void SetBackBufferRasterizerState(ID3D11RasterizerState* rasterizerState);
+    void SetBackBufferBlendState(ID3D11BlendState* blendState, const float blendFactor[4], uint32_t sampleMask);
+    void SetBackBufferDepthStencilState(ID3D11DepthStencilState* depthStencilState, UINT stencilRef);
     // 
     // IEffect
     //

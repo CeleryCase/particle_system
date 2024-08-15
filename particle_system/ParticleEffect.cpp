@@ -484,6 +484,21 @@ void ParticleEffect::SetSmokeDepthStencilState(ID3D11DepthStencilState* depthSte
     pImpl->m_pEffectHelper->GetEffectPass("RenderSmoke")->SetDepthStencilState(depthStencilState, stencilRef);
 }
 
+void ParticleEffect::SetBackBufferRasterizerState(ID3D11RasterizerState* rasterizerState)
+{
+    pImpl->m_pEffectHelper->GetEffectPass("RenderToBackBuffer")->SetRasterizerState(rasterizerState);
+}
+
+void ParticleEffect::SetBackBufferBlendState(ID3D11BlendState* blendState, const float blendFactor[4], uint32_t sampleMask)
+{
+    pImpl->m_pEffectHelper->GetEffectPass("RenderToBackBuffer")->SetBlendState(blendState, blendFactor, sampleMask);
+}
+
+void ParticleEffect::SetBackBufferDepthStencilState(ID3D11DepthStencilState* depthStencilState, UINT stencilRef)
+{
+    pImpl->m_pEffectHelper->GetEffectPass("RenderToBackBuffer")->SetDepthStencilState(depthStencilState, stencilRef);
+}
+
 void ParticleEffect::Apply(ID3D11DeviceContext* deviceContext)
 {
     XMMATRIX V = XMLoadFloat4x4(&pImpl->m_View);
